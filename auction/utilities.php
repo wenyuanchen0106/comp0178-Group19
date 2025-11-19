@@ -1,5 +1,132 @@
 <?php
 
+// ----------------------------------------------------
+// 1. 会话 & 数据库基础配置（在老师模板前面“加一段”）
+// ----------------------------------------------------
+
+// 启动 Session（如果别的文件已经启动也不会报错）
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// ===== 数据库连接配置 =====
+// XAMPP 默认：host=localhost, user=root, 密码为空
+// 数据库名改成你在 phpMyAdmin 里建的名字（例如 auction_db）
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'auction_db');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_CHARSET', 'utf8mb4');
+
+/**
+ * 获取全局唯一的 mysqli 连接
+ * 以后所有 PHP 文件都通过 get_db() 来拿连接，不要自己 new mysqli
+ */
+function get_db() {
+    static $conn = null;
+
+    if ($conn === null) {
+        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+
+        if ($conn->connect_error) {
+            // 课程项目为了调试方便，可以直接 die 出错误信息
+            die('Database connection failed: ' . $conn->connect_error);
+        }
+
+        $conn->set_charset(DB_CHARSET);
+    }
+
+    return $conn;
+}
+
+/**
+ * 执行带预处理的 SELECT 查询
+ *  - $sql   : 含 ? 占位符的 SQL
+ *  - $types : 例如 "si"（string, int）
+ *  - $params: 参数数组
+ * 返回 mysqli_result 或 false
+ */
+function db_query($sql, $types = '', $params = []) {
+    $conn = get_db();
+
+    if ($types === '' || empty($params)) {
+        // 无参数，直接普通 query
+        return $conn->query($sql);
+    }
+
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        die('Prepare failed: ' . $conn->error);
+    }
+
+    $stmt->bind_param($types, ...$params);
+
+    if (!$stmt->execute()) {
+        die('Execute failed: ' . $stmt->error);
+    }
+
+    return $stmt->get_result();
+}
+
+/**
+ * 执行 INSERT / UPDATE / DELETE
+ * 返回受影响行数
+ */
+function db_execute($sql, $types = '', $params = []) {
+    $conn = get_db();
+
+    if ($types === '' || empty($params)) {
+        $ok = $conn->query($sql);
+        if ($ok === false) {
+            die('Query failed: ' . $conn->error);
+        }
+        return $conn->affected_rows;
+    }
+
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        die('Prepare failed: ' . $conn->error);
+    }
+
+    $stmt->bind_param($types, ...$params);
+
+    if (!$stmt->execute()) {
+        die('Execute failed: ' . $stmt->error);
+    }
+
+    return $stmt->affected_rows;
+}
+
+/**
+ * 当前是否已登录
+ */
+function is_logged_in() {
+    return isset($_SESSION['user_id']);
+}
+
+/**
+ * 当前用户 ID（未登录返回 null）
+ */
+function current_user_id() {
+    return $_SESSION['user_id'] ?? null;
+}
+
+/**
+ * 当前用户角色（在登录时把 role_name 放进 session）
+ */
+function current_user_role() {
+    return $_SESSION['role_name'] ?? null;
+}
+
+/**
+ * 简单重定向工具
+ */
+function redirect($url) {
+    header("Location: " . $url);
+    exit();
+}
+//原有功能和模版
+
 // display_time_remaining:
 // Helper function to help figure out what time to display
 function display_time_remaining($interval) {
