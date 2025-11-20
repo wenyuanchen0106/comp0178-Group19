@@ -125,6 +125,78 @@ function redirect($url) {
     header("Location: " . $url);
     exit();
 }
+
+// 方便把查询结果一次性取成数组：[['col'=>...], ...]
+function db_fetch_all($sql, $types = '', $params = []) {
+    $rows = [];
+
+    $result = db_query($sql, $types, $params);
+    if ($result instanceof mysqli_result) {
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+        $result->free();
+    }
+
+    return $rows;
+}
+
+// 自动把已经到结束时间的拍卖结算掉：改成 finished，写 winner_id
+function close_expired_auctions() {
+    $now = date('Y-m-d H:i:s');
+
+    // 找所有已经过期但还没 finished/cancelled 的拍卖
+    $sql = "
+        SELECT auction_id
+        FROM auctions
+        WHERE end_date <= ?
+          AND status IN ('pending', 'active')
+    ";
+    $expired = db_fetch_all($sql, 's', [$now]);
+
+    foreach ($expired as $row) {
+        $auction_id = (int)$row['auction_id'];
+
+        // 找当前最高出价
+        $sqlMax = "
+            SELECT buyer_id, bid_amount
+            FROM bids
+            WHERE auction_id = ?
+            ORDER BY bid_amount DESC, bid_time ASC
+            LIMIT 1
+        ";
+        $resultMax = db_query($sqlMax, 'i', [$auction_id]);
+
+        $winner_id = null;
+
+        if ($resultMax instanceof mysqli_result && $resultMax->num_rows > 0) {
+            $maxBid = $resultMax->fetch_assoc();
+            $winner_id = (int)$maxBid['buyer_id'];
+            $resultMax->free();
+        }
+
+        // 根据有没有 winner 分成两种 UPDATE，避免 NULL 绑定成 0 的问题
+        if ($winner_id === null) {
+            $sqlUpdate = "
+                UPDATE auctions
+                SET status = 'finished',
+                    winner_id = NULL
+                WHERE auction_id = ?
+            ";
+            db_execute($sqlUpdate, 'i', [$auction_id]);
+        } else {
+            $sqlUpdate = "
+                UPDATE auctions
+                SET status = 'finished',
+                    winner_id = ?
+                WHERE auction_id = ?
+            ";
+            db_execute($sqlUpdate, 'ii', [$winner_id, $auction_id]);
+        }
+    }
+}
+
+
 //原有功能和模版
 
 // display_time_remaining:

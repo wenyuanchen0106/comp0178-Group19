@@ -138,7 +138,7 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
 
 
 
-echo('<div class="text-center">Auction successfully created! <a href="FIXME">View your new listing.</a></div>');
+echo('<div class="text-center">Auction successfully created! <a href="' . $link . '">View your new listing.</a></div>');
     }
 }    
 

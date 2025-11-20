@@ -127,7 +127,7 @@
             <input type="datetime-local"
                    class="form-control"
                    id="auctionEndDate"
-                   name="end_time"                   
+                   name="end_date"                   
                    required>
             <small id="endDateHelp" class="form-text text-muted"><span class="text-danger">* Required.</span> Day for the auction to end.</small>
           </div>
