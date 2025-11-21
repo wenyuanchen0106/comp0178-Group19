@@ -12,7 +12,7 @@
   // Feel free to extract out useful functions from browse.php and put them in
   // the shared "utilities.php" where they can be shared by multiple files.
   
-  
+  121212
   // TODO: Check user's credentials (cookie/session).
   
   // TODO: Perform a query to pull up auctions they might be interested in.
