@@ -1,18 +1,8 @@
 <?php
-  // For now, index.php just redirects to browse.php, but you can change this
-  // if you like.
- require_once 'utilities.php';
-close_expired_auctions();   
+require_once 'utilities.php';
+close_expired_auctions();
 
- // TEXT CODE
- // require_once 'utilities.php';
-
-//$conn = get_db();
-//if ($conn) {
-//    echo "DB OK<br>";
-//}
-
-// 取一些正在进行的拍卖（active），按结束时间最近排在前面
+// Query 10 active auctions for homepage preview
 $sql = "
   SELECT 
     a.auction_id,
@@ -33,9 +23,7 @@ $sql = "
 
 $result_index = db_query($sql);
 
-
 include_once 'header.php';
-//header("Location: browse.php");
 ?>
 
 <div class="container">
@@ -45,20 +33,33 @@ include_once 'header.php';
     <a href="browse.php" class="btn btn-primary">Browse all listings</a>
   </p>
 
+  <!-- ===== Recommended section ===== -->
+  <h3 class="mt-4">Recommended for you</h3>
+
+  <?php if (!is_logged_in() || current_user_role() !== 'buyer'): ?>
+    <p class="text-muted mt-2">
+      Log in as a buyer to see personalized recommendations here.
+    </p>
+  <?php else: ?>
+    <p class="text-muted mt-2">
+      Place a bid on an item to receive personalized recommendations.
+    </p>
+  <?php endif; ?>
+
+  <!-- ===== Active auctions preview ===== -->
   <ul class="list-group mt-4">
   <?php
     if (!$result_index || $result_index->num_rows == 0) {
       echo '<li class="list-group-item">No active auctions at the moment.</li>';
     } else {
       while ($row = $result_index->fetch_assoc()) {
-        $item_id       = $row['item_id'];                // 仍然走 item_id
+        $item_id       = $row['item_id'];
         $title         = $row['title'];
         $description   = $row['description'];
         $current_price = (float)$row['current_price'];
         $num_bids      = (int)$row['num_bids'];
         $end_date      = new DateTime($row['end_date']);
 
-        // 用老师给的工具函数渲染每一条
         print_listing_li(
           $item_id,
           $title,
