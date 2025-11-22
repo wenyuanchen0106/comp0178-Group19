@@ -1,0 +1,13 @@
+# Mac 系统文件
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VSCode 配置
+.vscode/
+
+# PHP 临时文件
+*.log
+
+# 数据库配置（如果有敏感信息）
+config.php
