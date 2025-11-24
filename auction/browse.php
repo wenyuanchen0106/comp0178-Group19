@@ -56,7 +56,7 @@ include_once 'header.php';
     <div class="col-md-3 pr-0">
       <div class="form-group">
         <label for="cat" class="sr-only">Search within:</label>
-        <select class="form-control" id="cat">
+        <select class="form-control" id="cat" name="cat">
           <option value="all" <?php if ($category === 'all') echo 'selected'; ?>>
                 All categories
               </option>
