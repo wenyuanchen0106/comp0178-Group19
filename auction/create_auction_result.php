@@ -108,7 +108,7 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
         $start_price_f   = (float)$start_price;
         $reserve_price_f = ($reserve_price === '' ? null : (float)$reserve_price);
         $start_date      = date('Y-m-d H:i:s');
-        $status          = 'open';
+        $status          = 'active';
 
         // 注意 reserve_price 可能为 NULL，所以这里分情况
         if ($reserve_price_f === null) {
