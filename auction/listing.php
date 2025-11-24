@@ -69,8 +69,8 @@ $watching = false;
 if ($has_session) {
     $user_id = $_SESSION['user_id'];
 
-    $sql_watch = "SELECT * FROM watchlist WHERE user_id = ? AND item_id = ?";
-    $result_watch = db_query($sql_watch, "ii", [$user_id, $item_id]);
+    $sql_watch = "SELECT * FROM watchlist WHERE user_id = ? AND auction_id = ?";
+    $result_watch = db_query($sql_watch, "ii", [$user_id, $auction_id]);
     $watching = ($result_watch->num_rows > 0);
 }
 
