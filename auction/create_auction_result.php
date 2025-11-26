@@ -1,6 +1,12 @@
-<?php require_once 'utilities.php';
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once 'utilities.php';
 include_once("header.php");
 ?>
+
 
 <div class="container my-5">
 
