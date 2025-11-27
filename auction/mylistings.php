@@ -2,7 +2,10 @@
 
 <div class="container">
 
-<h2 class="my-3">My listings</h2>
+<div class="d-flex justify-content-between align-items-center my-3">
+  <h2 class="mb-0">My listings</h2>
+  <a href="seller_stats.php" class="btn btn-info">View Statistics</a>
+</div>
 
 
 <?php
