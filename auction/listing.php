@@ -70,8 +70,30 @@ if ($now < $end_time) {
     $time_to_end = date_diff($now, $end_time);
     $time_remaining = ' (in ' . display_time_remaining($time_to_end) . ')';
 }
-?>
 
+/**
+ * ✅ 新增：最近 5 条出价历史（Bid history）
+ */
+$sql_history = "
+    SELECT 
+        b.bid_amount,
+        b.bid_time,
+        u.name
+    FROM bids b
+    JOIN users u ON b.buyer_id = u.user_id
+    WHERE b.auction_id = ?
+    ORDER BY b.bid_time DESC
+    LIMIT 5
+";
+$result_history = db_query($sql_history, 'i', [$auction_id]);
+$bid_history = [];
+if ($result_history && $result_history->num_rows > 0) {
+    while ($h = $result_history->fetch_assoc()) {
+        $bid_history[] = $h;
+    }
+    $result_history->free();
+}
+?>
 
 <div class="container">
 
@@ -190,12 +212,37 @@ if ($now < $end_time) {
         </div>
     </div> <!-- /row (description + bid + autobid) -->
 
-    <!-- ✅ 在这里加“Report this auction” 按钮，放在 container 里面 -->
+    <!-- ✅ 新增：最近 5 条出价记录 -->
+    <div class="row mt-4">
+        <div class="col-sm-8">
+            <h5>Recent bids</h5>
+            <?php if (empty($bid_history)): ?>
+                <p class="text-muted mb-3">No bids have been placed yet.</p>
+            <?php else: ?>
+                <ul class="list-group mb-3">
+                    <?php foreach ($bid_history as $bh): ?>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                £<?php echo number_format((float)$bh['bid_amount'], 2); ?>
+                            </span>
+                            <small class="text-muted">
+                                <?php echo htmlspecialchars($bh['name']); ?>
+                                &middot;
+                                <?php echo date('j M H:i', strtotime($bh['bid_time'])); ?>
+                            </small>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- ✅ 举报按钮 -->
     <?php if ($has_session): ?>
-    <div class="row mt-3">
+    <div class="row mt-3 mb-4">
         <div class="col-sm-12">
             <a href="report.php?auction_id=<?php echo urlencode($auction_id); ?>"
-            class="btn btn-outline-danger btn-sm">
+               class="btn btn-outline-danger btn-sm">
                 Report this auction
             </a>
         </div>
@@ -203,7 +250,6 @@ if ($now < $end_time) {
     <?php endif; ?>
 
 </div> <!-- /container -->
-
 
 <?php include_once "footer.php"; ?>
 
@@ -244,4 +290,3 @@ function removeFromWatchlist() {
     });
 }
 </script>
-
