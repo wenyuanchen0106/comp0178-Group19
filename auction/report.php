@@ -1,44 +1,49 @@
 <?php
-// report.php
-// 用于用户举报拍卖页面。用户从 listing.php 点击 “Report this auction” 跳转到这里。
-
 require_once 'utilities.php';
-require_login();   // 要求用户已登录
+require_login();
 
-// ===== 获取 auction_id / item_id =====
 $auction_id = isset($_GET['auction_id']) ? intval($_GET['auction_id']) : 0;
 $item_id    = isset($_GET['item_id']) ? intval($_GET['item_id']) : 0;
 
 if ($auction_id <= 0 || $item_id <= 0) {
-    echo "<p>Invalid report request.</p>";
-    exit;
+    die("<p class='text-danger'>Invalid request.</p>");
 }
 
 include_once 'header.php';
 ?>
 
-<div class="container mt-4">
-    <h2>Report auction</h2>
-    <p>Please describe the issue about this auction.</p>
+<div class="container mt-5">
+    <div class="card shadow-sm" style="border-radius: 10px;">
+        <div class="card-body p-4">
 
-    <form method="POST" action="report_submit.php" class="mt-3">
+            <h3 class="mb-3">📢 Report Auction</h3>
+            <p class="text-muted mb-4">Please describe the issue you found in this auction.</p>
 
-        <!-- 隐藏字段：传递必要信息 -->
-        <input type="hidden" name="auction_id" value="<?= $auction_id ?>">
-        <input type="hidden" name="item_id" value="<?= $item_id ?>">
+            <form method="POST" action="report_submit.php">
 
-        <div class="mb-3">
-            <label class="form-label" for="description">Reason / Description</label>
-            <textarea 
-                class="form-control" 
-                id="description" 
-                name="description" 
-                rows="4" 
-                required></textarea>
+                <input type="hidden" name="auction_id" value="<?php echo $auction_id; ?>">
+                <input type="hidden" name="item_id" value="<?php echo $item_id; ?>">
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Reason / Description</label>
+                    <textarea name="description" id="description" class="form-control" rows="4"
+                              placeholder="Describe what is wrong with this auction..." required></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="listing.php?item_id=<?php echo $item_id; ?>" class="btn btn-secondary">
+                        ⬅ Back
+                    </a>
+
+                    <button type="submit" class="btn btn-danger">
+                        Submit Report
+                    </button>
+                </div>
+
+            </form>
+
         </div>
-
-        <button type="submit" class="btn btn-danger">Submit report</button>
-    </form>
+    </div>
 </div>
 
 <?php include_once 'footer.php'; ?>
