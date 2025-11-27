@@ -72,72 +72,138 @@ if ($now < $end_time) {
 }
 ?>
 
+
 <div class="container">
 
-<div class="row">
-    <div class="col-sm-8">
-        <h2 class="my-3"><?php echo htmlspecialchars($title); ?></h2>
-    </div>
-
-    <div class="col-sm-4 align-self-center">
-
-<?php if ($has_session && $now < $end_time): ?>
-
-    <div id="watch_nowatch" <?php if ($watching) echo 'style="display:none"'; ?>>
-        <button class="btn btn-outline-secondary btn-sm" onclick="addToWatchlist()">+ Add to watchlist</button>
-    </div>
-
-    <div id="watch_watching" <?php if (!$watching) echo 'style="display:none"'; ?>>
-        <button type="button" class="btn btn-success btn-sm" disabled>Watching</button>
-        <button type="button" class="btn btn-danger btn-sm" onclick="removeFromWatchlist()">Remove watch</button>
-    </div>
-
-<?php endif; ?>
-
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-sm-8">
-        <div class="itemDescription">
-            <?php echo nl2br(htmlspecialchars($description)); ?>
+    <div class="row">
+        <div class="col-sm-8">
+            <h2 class="my-3"><?php echo htmlspecialchars($title); ?></h2>
         </div>
-    </div>
 
-    <div class="col-sm-4">
+        <div class="col-sm-4 align-self-center">
 
-        <?php if ($now > $end_time): ?>
+        <?php if ($has_session && $now < $end_time): ?>
 
-            <p>This auction ended <?php echo date_format($end_time, 'j M H:i'); ?></p>
+            <div id="watch_nowatch" <?php if ($watching) echo 'style="display:none"'; ?>>
+                <button class="btn btn-outline-secondary btn-sm" onclick="addToWatchlist()">+ Add to watchlist</button>
+            </div>
 
-        <?php else: ?>
-
-            <p>Auction ends <?php echo date_format($end_time, 'j M H:i') . $time_remaining; ?></p>
-            <p class="lead">Current bid: £<?php echo number_format($current_price, 2); ?></p>
-
-            <form method="POST" action="place_bid.php">
-                <input type="hidden" name="auction_id" value="<?php echo $auction_id; ?>">
-
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">£</span>
-                    </div>
-                    <input
-                        type="number"
-                        class="form-control"
-                        name="bid_amount"
-                        step="0.01"
-                        min="<?php echo $current_price + 0.01; ?>"
-                        required>
-                </div>
-
-                <button type="submit" class="btn btn-primary form-control">Place bid</button>
-            </form>
+            <div id="watch_watching" <?php if (!$watching) echo 'style="display:none"'; ?>>
+                <button type="button" class="btn btn-success btn-sm" disabled>Watching</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeFromWatchlist()">Remove watch</button>
+            </div>
 
         <?php endif; ?>
 
+        </div>
+    </div> <!-- /row (title + watchlist) -->
+
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="itemDescription">
+                <?php echo nl2br(htmlspecialchars($description)); ?>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+
+            <?php if ($now > $end_time): ?>
+
+                <p>This auction ended <?php echo date_format($end_time, 'j M H:i'); ?></p>
+
+            <?php else: ?>
+
+                <p>Auction ends <?php echo date_format($end_time, 'j M H:i') . $time_remaining; ?></p>
+                <p class="lead">Current bid: £<?php echo number_format($current_price, 2); ?></p>
+
+                <!-- 普通出价表单 -->
+                <form method="POST" action="place_bid.php">
+                    <input type="hidden" name="auction_id" value="<?php echo $auction_id; ?>">
+
+                    <div class="input-group mb-2">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">£</span>
+                        </div>
+                            <input
+                                type="number"
+                                class="form-control"
+                                name="bid_amount"
+                                step="0.01"
+                                min="<?php echo $current_price + 0.01; ?>"
+                                required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary form-control">Place bid</button>
+                </form>
+
+                <!-- 自动出价表单（autobid） -->
+                <?php if ($has_session): ?>
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Auto-bid
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="set_autobid.php">
+                                <input type="hidden" name="auction_id"
+                                    value="<?php echo $auction_id; ?>">
+
+                                <div class="mb-2">
+                                    <label for="maxAmount" class="form-label">
+                                        Max amount
+                                    </label>
+                                    <input type="number"
+                                        class="form-control"
+                                        id="maxAmount"
+                                        name="max_amount"
+                                        step="0.01"
+                                        min="<?php echo $current_price + 0.01; ?>"
+                                        required>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="stepAmount" class="form-label">
+                                        Step
+                                    </label>
+                                    <input type="number"
+                                        class="form-control"
+                                        id="stepAmount"
+                                        name="step"
+                                        step="0.01"
+                                        min="0.01"
+                                        required>
+                                </div>
+
+                                <button type="submit" class="btn btn-outline-primary w-100">
+                                    Save auto-bid
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <p class="text-muted mt-3">
+                        Log in to set an auto-bid
+                    </p>
+                <?php endif; ?>
+
+            <?php endif; ?>
+
+        </div>
+    </div> <!-- /row (description + bid + autobid) -->
+
+    <!-- ✅ 在这里加“Report this auction” 按钮，放在 container 里面 -->
+    <?php if ($has_session): ?>
+    <div class="row mt-3">
+        <div class="col-sm-12">
+            <a href="report.php?auction_id=<?php echo urlencode($auction_id); ?>"
+            class="btn btn-outline-danger btn-sm">
+                Report this auction
+            </a>
+        </div>
     </div>
-</div>
+    <?php endif; ?>
+
+</div> <!-- /container -->
+
 
 <?php include_once "footer.php"; ?>
 
@@ -147,7 +213,7 @@ function addToWatchlist() {
         type: "POST",
         data: {
             functionname: 'add_to_watchlist',
-            arguments: <?php echo $item_id; ?>
+            arguments: <?php echo $auction_id; ?>
         },
         success: function (response) {
             if (response.trim() === "success") {
@@ -165,7 +231,7 @@ function removeFromWatchlist() {
         type: "POST",
         data: {
             functionname: 'remove_from_watchlist',
-            arguments: <?php echo $item_id; ?>
+            arguments: <?php echo $auction_id; ?>
         },
         success: function (response) {
             if (response.trim() === "success") {

@@ -76,6 +76,17 @@ include_once 'header.php';
         $status        = $row['status'];
         $winner_id     = $row['winner_id'] !== null ? (int)$row['winner_id'] : null;
         $my_max_bid    = $row['my_max_bid'] !== null ? (float)$row['my_max_bid'] : null;
+        // 检查此拍卖是否已支付
+$paid = false;
+$sql_pay = "
+  SELECT 1 FROM payments
+  WHERE auction_id = ? AND user_id = ?
+  LIMIT 1
+";
+$pay_result = db_query($sql_pay, 'ii', [$row['auction_id'], $user_id]);
+if ($pay_result && $pay_result->num_rows > 0) {
+    $paid = true;
+}
 
         // 计算拍卖是否结束
         $now = new DateTime();
@@ -128,7 +139,35 @@ include_once 'header.php';
             <div>
               Ends: <?php echo date_format($end_time, 'j M H:i'); ?>
             </div>
-            <div><strong><?php echo htmlspecialchars($result_text); ?></strong></div>
+            <div>
+  <?php
+      $color = 'text-secondary';  // 默认灰色
+
+      if ($result_text === 'Outbid') {
+          $color = 'text-danger';  // 红色
+      } elseif ($result_text === 'Currently winning' || $result_text === 'You won') {
+          $color = 'text-success'; // 绿色
+      }
+  ?>
+  <strong class="<?php echo $color; ?>">
+      <?php echo htmlspecialchars($result_text); ?>
+  </strong>
+
+ <!-- ⭐⭐⭐ Pay now / Paid 按钮放在状态下面 ⭐⭐⭐ -->
+<?php if ($ended && $winner_id === $user_id): ?>
+
+    <?php if (!$paid): ?>
+        <a href="pay.php?auction_id=<?= $row['auction_id'] ?>"
+           class="btn btn-sm btn-success mt-2 d-block text-center">
+            Pay now
+        </a>
+    <?php else: ?>
+        <span class="badge bg-success mt-2 d-block">Paid</span>
+    <?php endif; ?>
+
+<?php endif; ?> 
+</div>
+
           </div>
         </div>
       </li>

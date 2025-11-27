@@ -104,6 +104,15 @@ function is_logged_in() {
     return isset($_SESSION['user_id']);
 }
 
+function require_login() {
+    if (!is_logged_in()) {
+        // 可以改成跳 login.php 或者直接 die 提示
+        header('Location: login.php');
+        exit();
+    }
+}
+
+
 /**
  * 当前用户 ID（未登录返回 null）
  */
