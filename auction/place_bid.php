@@ -1,6 +1,6 @@
 <?php
 
-// 处理用户出价 + 触发自动出价逻辑
+// 处理用户出价 + eBay 风格的自动出价逻辑
 require_once 'utilities.php';
 
 // 1) 必须是登录状态
@@ -27,7 +27,7 @@ if ($auction_id <= 0 || $bid_amount <= 0) {
     die("Invalid bid data.");
 }
 
-// 4) 查拍卖信息
+// 4) 查拍卖信息（包括 item_id, seller_id, start_price, end_date, status）
 $sql = "
     SELECT auction_id, item_id, seller_id, start_price, end_date, status
     FROM auctions
@@ -41,13 +41,14 @@ if (!$result || $result->num_rows === 0) {
 $auction = $result->fetch_assoc();
 $result->free();
 
+// 方便后面重定向回 listing.php
 $item_id     = (int)$auction['item_id'];
 $seller_id   = (int)$auction['seller_id'];
 $start_price = (float)$auction['start_price'];
 $end_time    = new DateTime($auction['end_date']);
 $status      = $auction['status'];
 
-// 5) 业务检查
+// 5) 业务检查：拍卖状态、时间、不能给自己出价
 $now = new DateTime();
 
 if ($status !== 'active') {
@@ -81,10 +82,13 @@ if ($max_bid === null) {
 
 // 7) 校验：新出价必须严格大于当前最高价
 if ($bid_amount <= $current_price) {
-    die("Your bid must be greater than the current highest bid (£" . number_format($current_price, 2) . ").");
+    die(
+        "Your bid must be greater than the current highest bid (£"
+        . number_format($current_price, 2) . ")."
+    );
 }
 
-// 8) 插入用户手动出价
+// 8) 插入一条新的“手动出价”记录
 $sql_insert = "
     INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
     VALUES (?, ?, ?, NOW())
@@ -92,66 +96,80 @@ $sql_insert = "
 db_execute($sql_insert, 'iid', [$auction_id, $user_id, $bid_amount]);
 
 /*
- * 9) 自动出价逻辑（简单版本）
- *
- * 思路：
- *   - 用户手动出价成功后，检查该拍卖是否有自动出价设置。
- *   - 找到“有自动出价、且上限还没被超过”的用户（不包括刚刚出价的人）。
- *   - 让其中一个满足条件的用户自动出价一步（current_price + step，不能超过 max_amount）。
+ * 9) eBay 风格自动出价逻辑
  */
 
-// 9.1 重新计算当前最高出价和当前最高出价的用户
-$sql_max_full = "
-    SELECT buyer_id, bid_amount
-    FROM bids
-    WHERE auction_id = ?
-    ORDER BY bid_amount DESC, bid_time ASC
-    LIMIT 1
-";
-$res_full = db_query($sql_max_full, 'i', [$auction_id]);
-$top      = $res_full->fetch_assoc();
-$res_full->free();
+$loop_guard = 0;
+$max_loops  = 50;  // 安全阀：一轮竞价最多自动抬价 50 次
 
-$current_highest_bidder = (int)$top['buyer_id'];
-$current_highest_amount = (float)$top['bid_amount'];
+while (true) {
+    $loop_guard++;
+    if ($loop_guard > $max_loops) {
+        break;
+    }
 
-// 9.2 查找该拍卖下所有自动出价设置（不包括刚刚出价的人）
-$sql_ab = "
-    SELECT user_id, max_amount, step
-    FROM autobids
-    WHERE auction_id = ?
-      AND user_id <> ?
-";
-$res_ab = db_query($sql_ab, 'ii', [$auction_id, $user_id]);
+    // 9.1 查询当前最高出价（buyer_id + bid_amount）
+    $sql_top = "
+        SELECT buyer_id, bid_amount
+        FROM bids
+        WHERE auction_id = ?
+        ORDER BY bid_amount DESC, bid_time ASC
+        LIMIT 1
+    ";
+    $res_top = db_query($sql_top, 'i', [$auction_id]);
+    if (!$res_top || $res_top->num_rows === 0) {
+        break;
+    }
+    $top = $res_top->fetch_assoc();
+    $res_top->free();
 
-if ($res_ab && $res_ab->num_rows > 0) {
+    $current_highest_bidder = (int)$top['buyer_id'];
+    $current_highest_amount = (float)$top['bid_amount'];
+
+    // 9.2 查询该拍卖的所有自动出价设置
+    $sql_ab = "
+        SELECT user_id, max_amount, step
+        FROM autobids
+        WHERE auction_id = ?
+        ORDER BY max_amount DESC
+    ";
+    $res_ab = db_query($sql_ab, 'i', [$auction_id]);
+
+    if (!$res_ab || $res_ab->num_rows === 0) {
+        if ($res_ab) {
+            $res_ab->free();
+        }
+        break;
+    }
+
+    $someone_bid = false;  // 标记这一轮里是否有任何人自动出价
+
     while ($ab = $res_ab->fetch_assoc()) {
-        $ab_user  = (int)$ab['user_id'];
-        $max      = (float)$ab['max_amount'];
-        $step     = (float)$ab['step'];
+        $ab_user = (int)$ab['user_id'];
+        $max     = (float)$ab['max_amount'];
+        $step    = (float)$ab['step'];
 
-        // 如果这个自动出价用户已经是当前最高出价人，就不用再处理
+        // 规则 1：当前最高出价人，本轮不再自动出价（防止自我抬价）
         if ($ab_user === $current_highest_bidder) {
             continue;
         }
 
-        // 该用户的最高愿出价必须高于当前价格，才有意义
+        // 规则 2：max_amount 必须高于当前价，否则没法继续加价
         if ($max <= $current_highest_amount) {
             continue;
         }
 
-        // 计算这次自动出价金额：加一步，但不能超过 max
+        // 计算这次自动出价金额
         $auto_bid_amount = $current_highest_amount + $step;
         if ($auto_bid_amount > $max) {
             $auto_bid_amount = $max;
         }
 
-        // 再次确保比当前最高价高
         if ($auto_bid_amount <= $current_highest_amount) {
             continue;
         }
 
-        // 插入一条自动出价记录
+        // 插入自动出价记录
         db_execute(
             "INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
              VALUES (?, ?, ?, NOW())",
@@ -159,16 +177,18 @@ if ($res_ab && $res_ab->num_rows > 0) {
             [$auction_id, $ab_user, $auto_bid_amount]
         );
 
-        // 更新当前最高价和最高出价人
         $current_highest_bidder = $ab_user;
         $current_highest_amount = $auto_bid_amount;
 
-        // 这里为了简单，每次只让一个自动出价用户出价一次，然后结束循环。
-        // 如果希望自动出价之间“互相抢价”，可以继续循环，但课程作业通常不要求那么复杂。
+        $someone_bid = true;
+    }
+
+    $res_ab->free();
+
+    if (!$someone_bid) {
         break;
     }
-    $res_ab->free();
 }
 
-// 10) 出价（包括自动出价）完成后，重定向回该商品详情页
+// 10) 所有出价（手动 + 自动）完成后，重定向回该商品详情页
 redirect("listing.php?item_id=" . $item_id);
