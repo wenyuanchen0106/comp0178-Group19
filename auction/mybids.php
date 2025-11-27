@@ -16,7 +16,7 @@ include_once 'header.php';
   
   
   // TODO: Check user's credentials (cookie/session).
-   if (!is_logged_in()) {
+  if (!is_logged_in()) {
     echo '<p>You must be logged in to view your bids.</p>';
     include_once 'footer.php';
     exit();
@@ -29,13 +29,15 @@ include_once 'header.php';
   /* 说明：
    * - a: auctions
    * - i: items
-   * - b: bids
    *
-   * 我们要得到：
-   *   - 每个拍卖的基本信息（title/description/end_date/status/winner_id）
-   *   - 这场拍卖的最高出价（current_price）
-   *   - 当前用户在该拍卖中的最高出价（my_max_bid）
-   *   - 出价次数（num_bids）
+   * We now use two aggregated subqueries on bids:
+   *   - all_bids: highest bid and total number of bids for each auction (all users)
+   *   - user_bids: highest bid placed by the current user for each auction
+   *
+   * Then we join them to get:
+   *   - current_price  = highest bid among all users for this auction
+   *   - my_max_bid     = highest bid of the current user in this auction
+   *   - num_bids       = total count of bids in this auction
    */
   $sql = "
     SELECT
@@ -46,21 +48,37 @@ include_once 'header.php';
       a.winner_id,
       i.title,
       i.description,
-      COALESCE(MAX(b.bid_amount), a.start_price) AS current_price,
-      COUNT(b.bid_id) AS num_bids,
-      MAX(CASE WHEN b.buyer_id = ? THEN b.bid_amount ELSE NULL END) AS my_max_bid
+      COALESCE(all_bids.max_bid, a.start_price) AS current_price,
+      COALESCE(all_bids.bid_count, 0) AS num_bids,
+      user_bids.user_max_bid AS my_max_bid
     FROM auctions a
     JOIN items i ON a.item_id = i.item_id
-    JOIN bids b  ON a.auction_id = b.auction_id
-    WHERE b.buyer_id = ?
-    GROUP BY a.auction_id
+    JOIN (
+        SELECT
+          auction_id,
+          MAX(bid_amount) AS max_bid,
+          COUNT(*)       AS bid_count
+        FROM bids
+        GROUP BY auction_id
+    ) AS all_bids
+      ON all_bids.auction_id = a.auction_id
+    JOIN (
+        SELECT
+          auction_id,
+          MAX(bid_amount) AS user_max_bid
+        FROM bids
+        WHERE buyer_id = ?
+        GROUP BY auction_id
+    ) AS user_bids
+      ON user_bids.auction_id = a.auction_id
     ORDER BY a.end_date DESC
   ";
 
-  $result = db_query($sql, 'ii', [$user_id, $user_id]);
+  // Only one parameter now: the current user's id
+  $result = db_query($sql, 'i', [$user_id]);
 
   // TODO: Loop through results and print them out as list items.
-   if (!$result || $result->num_rows === 0): ?>
+  if (!$result || $result->num_rows === 0): ?>
      <p>You have not placed any bids yet.</p>
   <?php else: ?>
 
@@ -89,17 +107,20 @@ if ($pay_result && $pay_result->num_rows > 0) {
 }
 
         // 计算拍卖是否结束
-        $now = new DateTime();
+        $now   = new DateTime();
         $ended = ($now >= $end_time || $status === 'finished' || $status === 'cancelled');
 
-        // 计算“结果”文字
-        $result_text = '';
+        // Compute result text and outbid alert flag
+        $result_text       = '';
+        $outbid_highlight  = false; // whether to visually highlight an outbid state
+
         if (!$ended) {
-          // 拍卖还在进行，判断当前是否领先
+          // 拍卖还在进行，比较“我自己的最高出价”和“全场最高出价”
           if ($my_max_bid !== null && $my_max_bid >= $current_price) {
             $result_text = 'Currently winning';
           } else {
-            $result_text = 'Outbid';
+            $result_text      = 'Outbid';
+            $outbid_highlight = true; // mark this auction as outbid
           }
         } else {
           // 拍卖已结束，根据 winner_id 判断是否获胜
@@ -109,8 +130,8 @@ if ($pay_result && $pay_result->num_rows > 0) {
             $result_text = 'You lost';
           }
         }
-?>
-<li class="list-group-item">
+    ?>
+      <li class="list-group-item <?php echo $outbid_highlight ? 'list-group-item-warning' : ''; ?>">
         <div class="d-flex justify-content-between">
           <div>
             <h5>
