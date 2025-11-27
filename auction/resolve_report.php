@@ -1,15 +1,38 @@
 <?php
-// resolve_report.php
-// 作用：管理员点击后，将某条举报的 status 更新为 'resolved'。
-
 require_once 'utilities.php';
+require_login();
 
-// TODO: 1. 检查当前用户是否为管理员，有权限处理举报。
-//
-// TODO: 2. 从 $_GET 或 $_POST 获取 report_id，并校验为整数。
-// TODO: 3. UPDATE reports SET status='resolved' WHERE report_id = ?。
-// TODO: 4. 可选：记录处理时间、处理人等字段（如果你在表里加了这些列）。
-//
-// TODO: 5. 设置一条 session 消息（例如 Resolved successfully），然后重定向回 admin_reports.php。
+// 管理员检查（假设 role_id=2 是 seller，role_id=1 是 buyer，管理员你自己定义）
+if ($_SESSION['role_id'] != 2) {
+    die("<p class='text-danger'>Access denied: Admins only.</p>");
+}
 
-exit;
+$report_id = isset($_GET['report_id']) ? intval($_GET['report_id']) : 0;
+
+if ($report_id <= 0) {
+    die("<p class='text-danger'>Invalid report ID.</p>");
+}
+
+$sql = "UPDATE reports SET status='resolved' WHERE report_id = ?";
+db_query($sql, "i", [$report_id]);
+
+include_once 'header.php';
+?>
+
+<div class="container mt-5">
+    <div class="card shadow-sm" style="border-radius: 10px;">
+        <div class="card-body text-center p-4">
+            
+            <h3 class="text-success mb-3">🎉 Report Resolved</h3>
+
+            <p class="text-muted mb-2">The report has been marked as <strong>resolved</strong>.</p>
+
+            <a href="admin_reports.php" class="btn btn-primary mt-3" style="padding:10px 20px; border-radius:6px;">
+                ⬅ Back to Reports
+            </a>
+
+        </div>
+    </div>
+</div>
+
+<?php include_once 'footer.php'; ?>
