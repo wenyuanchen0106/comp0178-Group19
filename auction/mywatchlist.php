@@ -13,9 +13,14 @@ $user_id = current_user_id();
 
 /* 查询 watchlist 列表 */
 $sql = "
-    SELECT w.item_id, i.title, i.description
+    SELECT 
+        w.auction_id,                  -- 必须查询 auction_id，用于移除关注
+        i.item_id,                     -- 查询 item_id，用于链接到商品详情页
+        i.title, 
+        i.description
     FROM watchlist w
-    JOIN items i ON w.item_id = i.item_id
+    JOIN auctions a ON w.auction_id = a.auction_id  -- 通过 auction_id 关联到 auctions
+    JOIN items i ON a.item_id = i.item_id          -- 通过 item_id 关联到 items
     WHERE w.user_id = ?
 ";
 $result = db_query($sql, "i", [$user_id]);
@@ -30,12 +35,14 @@ $result = db_query($sql, "i", [$user_id]);
 
 <?php else: ?>
 
-    <ul class="list-group mb-5">
+   <ul class="list-group mb-5">
 
         <?php while ($row = $result->fetch_assoc()):
-            $item_id = (int)$row['item_id'];
-            $title   = $row['title'];
-            $desc    = $row['description'];
+            // 获取 auction_id (用于移除操作) 和 item_id (用于查看商品链接)
+            $auction_id = (int)$row['auction_id'];
+            $item_id    = (int)$row['item_id']; 
+            $title      = $row['title'];
+            $desc       = $row['description'];
         ?>
 
         <li class="list-group-item d-flex justify-content-between align-items-center">

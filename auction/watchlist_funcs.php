@@ -15,10 +15,10 @@ if (!isset($_POST['functionname']) || !isset($_POST['arguments'])) {
 }
 
 $function = $_POST['functionname'];
-$item_id  = (int)$_POST['arguments'];
+$auction_id  = (int)$_POST['arguments'];
 $user_id  = current_user_id();
 
-if ($item_id <= 0 || !$user_id) {
+if ($auction_id <= 0 || !$user_id) {
     echo "error";
     exit();
 }
@@ -26,8 +26,8 @@ if ($item_id <= 0 || !$user_id) {
 /* ========== 添加到 watchlist ========== */
 if ($function === "add_to_watchlist") {
 
-    $sql = "INSERT IGNORE INTO watchlist (user_id, item_id) VALUES (?, ?)";
-    db_query($sql, "ii", [$user_id, $item_id]);
+    $sql = "INSERT IGNORE INTO watchlist (user_id, auction_id) VALUES (?, ?)";
+    db_query($sql, "ii", [$user_id, $auction_id]);
 
     echo "success";
     exit();
@@ -36,8 +36,8 @@ if ($function === "add_to_watchlist") {
 /* ========== 从 watchlist 删除 ========== */
 if ($function === "remove_from_watchlist") {
 
-    $sql = "DELETE FROM watchlist WHERE user_id = ? AND item_id = ?";
-    db_query($sql, "ii", [$user_id, $item_id]);
+    $sql = "DELETE FROM watchlist WHERE user_id = ? AND auction_id = ?";
+    db_query($sql, "ii", [$user_id, $auction_id]);
 
     echo "success";
     exit();
