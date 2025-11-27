@@ -1,59 +1,82 @@
-<?php include_once("header.php")?>
-
-<div class="container">
-
-<h2 class="my-3 text-uppercase" style="font-family: 'Oswald', sans-serif; letter-spacing: 1px;">My listings</h2>
-
 <?php
-  // 1. 检查用户身份（必须已登录且为 seller）
-  if (!is_logged_in() || current_user_role() !== 'seller') {
-      echo '<div class="alert alert-danger text-center my-4">
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once 'utilities.php';
+close_expired_auctions();
+include_once 'header.php';
+
+// 1. Check user role (must be logged in as seller)
+if (!is_logged_in() || current_user_role() !== 'seller') {
+    echo '<div class="container">
+            <div class="alert alert-danger text-center my-4">
               You must be logged in as a seller to view your listings.
-            </div>';
-      echo '<div class="text-center mb-5">
+            </div>
+            <div class="text-center mb-5">
               <a href="browse.php" class="btn btn-secondary">Back to browse</a>
-            </div>';
-      include_once("footer.php");
-      exit();
-  }
+            </div>
+          </div>';
+    include_once 'footer.php';
+    exit();
+}
 
-  $seller_id = current_user_id();
+$seller_id = current_user_id();
 
-  // 2. 查询当前卖家发布的所有拍卖 (包含 image_path)
-  $sql = "
+// 2. Fetch all auctions created by this seller, with image, basic stats and payment flag
+$sql = "
     SELECT
         i.item_id,
         i.image_path,
         i.title,
+        a.auction_id,
         a.start_price,
         a.end_date,
         a.status,
         a.winner_id,
-        COUNT(b.bid_id) as num_bids
+        COUNT(b.bid_id) AS num_bids,
+        MAX(b.bid_amount) AS max_bid,
+        EXISTS(
+            SELECT 1
+            FROM payments p
+            WHERE p.auction_id = a.auction_id
+              AND p.status = 'completed'
+        ) AS is_paid
     FROM items i
     JOIN auctions a ON i.item_id = a.item_id
     LEFT JOIN bids b ON a.auction_id = b.auction_id
     WHERE i.seller_id = ?
-    GROUP BY i.item_id, i.title, a.start_price, a.end_date, a.status, a.winner_id
+    GROUP BY
+        i.item_id,
+        i.image_path,
+        i.title,
+        a.auction_id,
+        a.start_price,
+        a.end_date,
+        a.status,
+        a.winner_id
     ORDER BY a.end_date DESC
-  ";
+";
 
-  $result = db_query($sql, "i", [$seller_id]);
+$result = db_query($sql, "i", [$seller_id]);
 
-  // 分成两组
-  $active = [];
-  $finished = [];
+$active = [];
+$finished = [];
 
-  if ($result && $result->num_rows > 0) {
-      while ($row = $result->fetch_assoc()) {
-          if ($row['status'] == 'active' || $row['status'] == 'pending') {
-              $active[] = $row;
-          } else {
-              $finished[] = $row;
-          }
-      }
-  }
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        if ($row['status'] === 'active' || $row['status'] === 'pending') {
+            $active[] = $row;
+        } else {
+            $finished[] = $row;
+        }
+    }
+}
 ?>
+
+<div class="container">
+
+<h2 class="my-3 text-uppercase" style="font-family: 'Oswald', sans-serif; letter-spacing: 1px;">My listings</h2>
 
 <?php if (empty($active) && empty($finished)): ?>
 
@@ -68,21 +91,19 @@
     <h4 class="mt-4 mb-3 text-light" style="font-family: 'Oswald', sans-serif;">ACTIVE AUCTIONS</h4>
     <ul class="list-group mb-5" style="border: none;">
       <?php foreach ($active as $row):
-          $item_id = (int)$row['item_id'];
-          $title = $row['title'];
+          $item_id     = (int)$row['item_id'];
+          $auction_id  = (int)$row['auction_id'];
+          $title       = $row['title'];
           $start_price = (float)$row['start_price'];
-          $num_bids = (int)$row['num_bids'];
-          $end_date = new DateTime($row['end_date']);
-          $now = new DateTime();
-          
-          // --- 图片逻辑 ---
+          $num_bids    = (int)$row['num_bids'];
+          $end_date    = new DateTime($row['end_date']);
+          $now         = new DateTime();
+
           $img_path = $row['image_path'] ?? null;
           $img_html = '';
           if (!empty($img_path) && file_exists("images/" . $img_path)) {
-              // 有图
               $img_html = '<img src="images/' . $img_path . '" alt="Item" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
           } else {
-              // 无图：显示正方形占位符 (复用之前的样式，稍微改小一点适配列表)
               $img_html = '<div class="img-placeholder" style="width: 120px; height: 120px; margin: 0;"></div>';
           }
 
@@ -102,23 +123,25 @@
 
           <div class="flex-grow-1">
               <h5 class="mb-1">
-                <a href="listing.php?item_id=<?= $item_id ?>" class="text-light" style="font-family: 'Oswald', sans-serif; letter-spacing: 0.5px;">
-                  <?= htmlspecialchars($title) ?>
+                <a href="listing.php?item_id=<?php echo $item_id; ?>" class="text-light" style="font-family: 'Oswald', sans-serif; letter-spacing: 0.5px;">
+                  <?php echo htmlspecialchars($title); ?>
                 </a>
               </h5>
               <div class="text-muted small">
-                Ends: <?= $end_date->format('j M H:i') ?> <br>
-                <span class="text-warning"><?= $time_remaining ?></span>
+                Ends: <?php echo $end_date->format('j M H:i'); ?> <br>
+                <span class="text-warning"><?php echo $time_remaining; ?></span>
               </div>
           </div>
           
           <div class="text-right">
-              <div class="mb-2" style="font-size: 1.2rem; font-weight: bold; color: var(--color-accent);">£<?= number_format($start_price, 2) ?></div>
-              <div class="text-muted small mb-2"><?= $num_bids ?> bid(s)</div>
+              <div class="mb-2" style="font-size: 1.2rem; font-weight: bold; color: var(--color-accent);">
+                  £<?php echo number_format($start_price, 2); ?>
+              </div>
+              <div class="text-muted small mb-2"><?php echo $num_bids; ?> bid(s)</div>
               
               <div class="btn-group-vertical">
-                <a href="listing.php?item_id=<?= $item_id ?>" class="btn btn-sm btn-outline-light mb-1">View</a>
-                <button class="btn btn-sm btn-danger" onclick="endAuction(<?= $item_id ?>)">End Now</button>
+                <a href="listing.php?item_id=<?php echo $item_id; ?>" class="btn btn-sm btn-outline-light mb-1">View</a>
+                <button class="btn btn-sm btn-danger" onclick="endAuction(<?php echo $item_id; ?>)">End Now</button>
               </div>
           </div>
         </li>
@@ -138,20 +161,34 @@
     <h4 class="mt-4 mb-3 text-light" style="font-family: 'Oswald', sans-serif;">FINISHED AUCTIONS</h4>
     <ul class="list-group mb-5" style="border: none;">
       <?php foreach ($finished as $row):
-          $item_id = (int)$row['item_id'];
-          $title = $row['title'];
+          $item_id     = (int)$row['item_id'];
+          $auction_id  = (int)$row['auction_id'];
+          $title       = $row['title'];
           $start_price = (float)$row['start_price'];
-          $num_bids = (int)$row['num_bids'];
-          $winner_id = $row['winner_id'];
-          $end_date = new DateTime($row['end_date']);
-          
-          // --- 图片逻辑 (同上) ---
+          $num_bids    = (int)$row['num_bids'];
+          $winner_id   = $row['winner_id'];
+          $end_date    = new DateTime($row['end_date']);
+          $max_bid     = $row['max_bid'] !== null ? (float)$row['max_bid'] : null;
+          $final_price = $max_bid !== null ? $max_bid : $start_price;
+          $is_paid     = (int)$row['is_paid'] === 1;
+
           $img_path = $row['image_path'] ?? null;
           $img_html = '';
           if (!empty($img_path) && file_exists("images/" . $img_path)) {
               $img_html = '<img src="images/' . $img_path . '" alt="Item" style="width: 100px; height: 100px; object-fit: cover; opacity: 0.6;">';
           } else {
               $img_html = '<div class="img-placeholder" style="width: 100px; height: 100px; margin: 0; opacity: 0.6;"></div>';
+          }
+
+          $status_badge = '';
+          if ($winner_id) {
+              if ($is_paid) {
+                  $status_badge = '<span class="badge badge-success ml-2">SOLD (paid)</span>';
+              } else {
+                  $status_badge = '<span class="badge badge-warning ml-2">SOLD (not paid)</span>';
+              }
+          } else {
+              $status_badge = '<span class="badge badge-secondary ml-2">UNSOLD</span>';
           }
       ?>
         <li class="list-group-item d-flex align-items-center" 
@@ -163,23 +200,19 @@
 
           <div class="flex-grow-1">
             <h5 class="mb-1">
-              <a href="listing.php?item_id=<?= $item_id ?>" class="text-muted" style="text-decoration: line-through;">
-                <?= htmlspecialchars($title) ?>
+              <a href="listing.php?item_id=<?php echo $item_id; ?>" class="text-muted" style="text-decoration: line-through;">
+                <?php echo htmlspecialchars($title); ?>
               </a>
-              <?php if ($winner_id): ?>
-                <span class="badge badge-success ml-2">SOLD</span>
-              <?php else: ?>
-                <span class="badge badge-secondary ml-2">UNSOLD</span>
-              <?php endif; ?>
+              <?php echo $status_badge; ?>
             </h5>
             <small class="text-muted">
-              Ended: <?= $end_date->format('j M Y') ?>
+              Ended: <?php echo $end_date->format('j M Y'); ?>
             </small>
           </div>
 
           <div class="text-right text-muted">
-            <div>Final Price: £<?= number_format($start_price, 2) ?></div>
-            <small><?= $num_bids ?> bid(s)</small>
+            <div>Final price: £<?php echo number_format($final_price, 2); ?></div>
+            <small><?php echo $num_bids; ?> bid(s)</small>
           </div>
         </li>
       <?php endforeach; ?>
@@ -190,4 +223,4 @@
 
 </div>
 
-<?php include_once("footer.php")?>
+<?php include_once 'footer.php'; ?>
