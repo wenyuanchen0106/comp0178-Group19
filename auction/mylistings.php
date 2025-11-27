@@ -2,26 +2,10 @@
 
 <div class="container">
 
-<h2 class="my-3">My listings</h2>
-
+<h2 class="my-3 text-uppercase" style="font-family: 'Oswald', sans-serif; letter-spacing: 1px;">My listings</h2>
 
 <?php
-  // This page is for showing a user the auction listings they've made.
-  // It will be pretty similar to browse.php, except there is no search bar.
-  // This can be started after browse.php is working with a database.
-  // Feel free to extract out useful functions from browse.php and put them in
-  // the shared "utilities.php" where they can be shared by multiple files.
-  
-  
-  // TODO: Check user's credentials (cookie/session).
-  
-  // TODO: Perform a query to pull up their auctions.
-  
-  // TODO: Loop through results and print them out as list items.
-
-  // ===============================
   // 1. 检查用户身份（必须已登录且为 seller）
-  // ===============================
   if (!is_logged_in() || current_user_role() !== 'seller') {
       echo '<div class="alert alert-danger text-center my-4">
               You must be logged in as a seller to view your listings.
@@ -35,12 +19,11 @@
 
   $seller_id = current_user_id();
 
-  // ===============================
-  // 2. 查询当前卖家发布的所有拍卖
-  // ===============================
+  // 2. 查询当前卖家发布的所有拍卖 (包含 image_path)
   $sql = "
     SELECT
         i.item_id,
+        i.image_path,
         i.title,
         a.start_price,
         a.end_date,
@@ -74,15 +57,16 @@
 
 <?php if (empty($active) && empty($finished)): ?>
 
-  <p class="my-4">You have not created any auctions yet.</p>
-  <a href="create_auction.php" class="btn btn-primary mb-5">+ Create your first auction</a>
+  <div class="text-center py-5">
+      <p class="my-4 text-muted">You have not created any auctions yet.</p>
+      <a href="create_auction.php" class="btn btn-primary btn-lg">+ Create your first auction</a>
+  </div>
 
 <?php else: ?>
 
-  <!-- Active Auctions -->
   <?php if (!empty($active)): ?>
-    <h4 class="mt-4 mb-3">Active Auctions</h4>
-    <ul class="list-group mb-5">
+    <h4 class="mt-4 mb-3 text-light" style="font-family: 'Oswald', sans-serif;">ACTIVE AUCTIONS</h4>
+    <ul class="list-group mb-5" style="border: none;">
       <?php foreach ($active as $row):
           $item_id = (int)$row['item_id'];
           $title = $row['title'];
@@ -90,6 +74,17 @@
           $num_bids = (int)$row['num_bids'];
           $end_date = new DateTime($row['end_date']);
           $now = new DateTime();
+          
+          // --- 图片逻辑 ---
+          $img_path = $row['image_path'] ?? null;
+          $img_html = '';
+          if (!empty($img_path) && file_exists("images/" . $img_path)) {
+              // 有图
+              $img_html = '<img src="images/' . $img_path . '" alt="Item" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
+          } else {
+              // 无图：显示正方形占位符 (复用之前的样式，稍微改小一点适配列表)
+              $img_html = '<div class="img-placeholder" style="width: 120px; height: 120px; margin: 0;"></div>';
+          }
 
           if ($now > $end_date) {
               $time_remaining = 'Ending soon';
@@ -98,26 +93,33 @@
               $time_remaining = display_time_remaining($interval) . ' remaining';
           }
       ?>
-        <li class="list-group-item">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h5>
-                <a href="listing.php?item_id=<?= $item_id ?>">
+        <li class="list-group-item d-flex align-items-center" 
+            style="background-color: rgba(28, 28, 30, 0.9); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; border-radius: 4px; border-left: 4px solid var(--color-primary);">
+          
+          <div class="mr-3">
+              <?php echo $img_html; ?>
+          </div>
+
+          <div class="flex-grow-1">
+              <h5 class="mb-1">
+                <a href="listing.php?item_id=<?= $item_id ?>" class="text-light" style="font-family: 'Oswald', sans-serif; letter-spacing: 0.5px;">
                   <?= htmlspecialchars($title) ?>
                 </a>
               </h5>
-              <small class="text-muted">
-                Ends: <?= $end_date->format('Y-m-d H:i') ?> (<?= $time_remaining ?>)
-              </small>
-            </div>
-            <div class="text-right">
-              <div>Start price: £<?= number_format($start_price, 2) ?></div>
-              <small class="text-muted"><?= $num_bids ?> bid(s)</small>
-              <div class="mt-2">
-                <a href="listing.php?item_id=<?= $item_id ?>" class="btn btn-sm btn-outline-primary">View</a>
-                <button class="btn btn-sm btn-danger" onclick="endAuction(<?= $item_id ?>)">End Auction</button>
+              <div class="text-muted small">
+                Ends: <?= $end_date->format('j M H:i') ?> <br>
+                <span class="text-warning"><?= $time_remaining ?></span>
               </div>
-            </div>
+          </div>
+          
+          <div class="text-right">
+              <div class="mb-2" style="font-size: 1.2rem; font-weight: bold; color: var(--color-accent);">£<?= number_format($start_price, 2) ?></div>
+              <div class="text-muted small mb-2"><?= $num_bids ?> bid(s)</div>
+              
+              <div class="btn-group-vertical">
+                <a href="listing.php?item_id=<?= $item_id ?>" class="btn btn-sm btn-outline-light mb-1">View</a>
+                <button class="btn btn-sm btn-danger" onclick="endAuction(<?= $item_id ?>)">End Now</button>
+              </div>
           </div>
         </li>
       <?php endforeach; ?>
@@ -132,10 +134,9 @@
   }
   </script>
 
-  <!-- Finished Auctions -->
   <?php if (!empty($finished)): ?>
-    <h4 class="mt-4 mb-3">Finished Auctions</h4>
-    <ul class="list-group mb-5">
+    <h4 class="mt-4 mb-3 text-light" style="font-family: 'Oswald', sans-serif;">FINISHED AUCTIONS</h4>
+    <ul class="list-group mb-5" style="border: none;">
       <?php foreach ($finished as $row):
           $item_id = (int)$row['item_id'];
           $title = $row['title'];
@@ -143,26 +144,42 @@
           $num_bids = (int)$row['num_bids'];
           $winner_id = $row['winner_id'];
           $end_date = new DateTime($row['end_date']);
+          
+          // --- 图片逻辑 (同上) ---
+          $img_path = $row['image_path'] ?? null;
+          $img_html = '';
+          if (!empty($img_path) && file_exists("images/" . $img_path)) {
+              $img_html = '<img src="images/' . $img_path . '" alt="Item" style="width: 100px; height: 100px; object-fit: cover; opacity: 0.6;">';
+          } else {
+              $img_html = '<div class="img-placeholder" style="width: 100px; height: 100px; margin: 0; opacity: 0.6;"></div>';
+          }
       ?>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <h5>
-              <a href="listing.php?item_id=<?= $item_id ?>">
+        <li class="list-group-item d-flex align-items-center" 
+            style="background-color: #1a1a1a; border: 1px solid #333; margin-bottom: 10px; border-radius: 4px; border-left: 4px solid #555;">
+          
+          <div class="mr-3">
+              <?php echo $img_html; ?>
+          </div>
+
+          <div class="flex-grow-1">
+            <h5 class="mb-1">
+              <a href="listing.php?item_id=<?= $item_id ?>" class="text-muted" style="text-decoration: line-through;">
                 <?= htmlspecialchars($title) ?>
               </a>
               <?php if ($winner_id): ?>
-                <span class="badge badge-success">Sold</span>
+                <span class="badge badge-success ml-2">SOLD</span>
               <?php else: ?>
-                <span class="badge badge-secondary">Unsold</span>
+                <span class="badge badge-secondary ml-2">UNSOLD</span>
               <?php endif; ?>
             </h5>
             <small class="text-muted">
-              Ended: <?= $end_date->format('Y-m-d H:i') ?>
+              Ended: <?= $end_date->format('j M Y') ?>
             </small>
           </div>
-          <div class="text-right">
-            <div>Start price: £<?= number_format($start_price, 2) ?></div>
-            <small class="text-muted"><?= $num_bids ?> bid(s)</small>
+
+          <div class="text-right text-muted">
+            <div>Final Price: £<?= number_format($start_price, 2) ?></div>
+            <small><?= $num_bids ?> bid(s)</small>
           </div>
         </li>
       <?php endforeach; ?>

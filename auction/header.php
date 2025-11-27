@@ -9,7 +9,8 @@ require_once 'utilities.php';
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="css/custom.css">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/custom.css?v=<?php echo time(); ?>">
   <title>[My Auction Site]</title>
 </head>
 
@@ -17,7 +18,7 @@ require_once 'utilities.php';
 
 <!-- Top navbar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light mx-2">
-  <a class="navbar-brand" href="#">Site Name</a>
+  <a class="navbar-brand" href="#"><i class="fa fa-shield"></i>Stark Exchange</a>
   <ul class="navbar-nav ml-auto">
     <li class="nav-item">
 
@@ -32,7 +33,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
         . 'Hello, ' . htmlspecialchars($role)
         . (!empty($email) ? ' (' . htmlspecialchars($email) . ')' : '')
         . '</span>';
-  echo '<a class="nav-link" href="logout.php">Logout</a>';
+  echo '<a class="nav-link" href="logout.php"><i class="fa fa-sign-out"></i>Logout</a>';
   echo '</div>';
 
 } else {
@@ -48,7 +49,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
   <ul class="navbar-nav align-middle">
 
     <li class="nav-item mx-1">
-      <a class="nav-link" href="browse.php">Browse</a>
+      <a class="nav-link" href="browse.php"><i class="fa fa-search"></i>Browse</a>
     </li>
 
 <?php
@@ -56,13 +57,13 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
 if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
   echo('
     <li class="nav-item mx-1">
-      <a class="nav-link" href="mybids.php">My Bids</a>
+      <a class="nav-link" href="mybids.php"><i class="fa fa-gavel"></i>My Bids</a>
     </li>
     <li class="nav-item mx-1">
-      <a class="nav-link" href="recommendations.php">Recommended</a>
+      <a class="nav-link" href="recommendations.php"><i class="fa fa-bullseye"></i>Recommended</a>
     </li>
     <li class="nav-item mx-1">
-      <a class="nav-link" href="mywatchlist.php">My Watchlist</a>
+      <a class="nav-link" href="mywatchlist.php"><i class="fa fa-star"></i>My Watchlist</a>
     </li>');
 }
 
@@ -73,7 +74,7 @@ if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
       <a class="nav-link" href="mylistings.php">My Listings</a>
     </li>
     <li class="nav-item ml-3">
-      <a class="nav-link btn border-light" href="create_auction.php">+ Create auction</a>
+      <a class="nav-link btn border-light" href="create_auction.php"> <i class="fa fa-rocket"></i> Create auction</a>
     </li>');
 }
 ?>

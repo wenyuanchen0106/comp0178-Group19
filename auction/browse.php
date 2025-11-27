@@ -210,6 +210,7 @@ include_once 'header.php';
       a.auction_id,
       a.item_id,
       i.title,
+      i.image_path,
       i.description,
       COALESCE(MAX(b.bid_amount), a.start_price) AS current_price,
       COUNT(b.bid_id) AS num_bids,
@@ -283,7 +284,8 @@ include_once 'header.php';
         $description,
         $current_price,
         $num_bids,
-        $end_date
+        $end_date,
+        $row['image_path']
       );
     }
     $result_list->free();

@@ -231,9 +231,9 @@ function display_time_remaining($interval) {
 
 // print_listing_li:
 // This function prints an HTML <li> element containing an auction listing
-function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time)
+function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time, $image_path = null)
 {
-  // Truncate long descriptions
+  // --- 1. 保持你原有的截断逻辑 ---
   if (strlen($desc) > 250) {
     $desc_shortened = substr($desc, 0, 250) . '...';
   }
@@ -241,7 +241,7 @@ function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time)
     $desc_shortened = $desc;
   }
   
-  // Fix language of bid vs. bids
+  // --- 2. 保持你原有的竞价语言逻辑 ---
   if ($num_bids == 1) {
     $bid = ' bid';
   }
@@ -249,22 +249,48 @@ function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time)
     $bid = ' bids';
   }
   
-  // Calculate time to auction end
+  // --- 3. 保持你原有的时间计算逻辑 ---
   $now = new DateTime();
   if ($now > $end_time) {
     $time_remaining = 'This auction has ended';
   }
   else {
-    // Get interval:
     $time_to_end = date_diff($now, $end_time);
     $time_remaining = display_time_remaining($time_to_end) . ' remaining';
   }
+
+  // --- 4. 新增：图片处理逻辑 ---
+  $img_html = '';
+  // 如果有路径且文件存在 -> 显示真实图片
+  if (!empty($image_path) && file_exists("images/" . $image_path)) {
+      $img_html = '<img src="images/' . $image_path . '" alt="' . htmlspecialchars($title) . '" style="width: 150px; height: 150px; object-fit: cover; border-radius: 4px; margin-right: 20px; border: 1px solid #333;">';
+  } else {
+      // 否则 -> 显示你的酷炫占位符 (class="img-placeholder")
+      // 注意：这里需要确保你 custom.css 里的 .img-placeholder 已经有了 width: 150px
+      $img_html = '<div class="img-placeholder"></div>';
+  }
   
-  // Print HTML
+  // --- 5. 修改后的 HTML 输出 ---
+  // 改动点：
+  // a. li 上加了 align-items-center (让图片和文字垂直居中)
+  // b. 最前面插入了 $img_html
+  // c. 中间的 div 加了 flex-grow-1 (让它自动填满剩余空间)
+  
   echo('
-    <li class="list-group-item d-flex justify-content-between">
-    <div class="p-2 mr-5"><h5><a href="listing.php?item_id=' . $item_id . '">' . $title . '</a></h5>' . $desc_shortened . '</div>
-    <div class="text-center text-nowrap"><span style="font-size: 1.5em">£' . number_format($price, 2) . '</span><br/>' . $num_bids . $bid . '<br/>' . $time_remaining . '</div>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+    
+    ' . $img_html . '
+
+    <div class="p-2 mr-5 flex-grow-1">
+        <h5><a href="listing.php?item_id=' . $item_id . '">' . $title . '</a></h5>
+        ' . $desc_shortened . '
+    </div>
+    
+    <div class="text-center text-nowrap">
+        <span style="font-size: 1.5em; color: var(--color-accent); font-weight:bold;">£' . number_format($price, 2) . '</span><br/>
+        ' . $num_bids . $bid . '<br/>
+        ' . $time_remaining . '
+    </div>
   </li>'
   );
 }
