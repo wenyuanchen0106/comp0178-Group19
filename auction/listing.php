@@ -237,17 +237,21 @@ if ($result_history && $result_history->num_rows > 0) {
         </div>
     </div>
 
-    <!-- ✅ 举报按钮 -->
-    <?php if ($has_session): ?>
-    <div class="row mt-3 mb-4">
-        <div class="col-sm-12">
-            <a href="report.php?auction_id=<?php echo urlencode($auction_id); ?>"
-               class="btn btn-outline-danger btn-sm">
-                Report this auction
-            </a>
-        </div>
+    <!-- 举报按钮 -->
+<?php if ($has_session): ?>
+<div class="row mt-3 mb-4">
+    <div class="col-sm-12">
+       <a href="report.php?auction_id=<?php echo urlencode($auction_id); ?>&item_id=<?php echo urlencode($item_id); ?>"
+   class="btn btn-outline-danger btn-sm">
+    Report this auction
+</a>
+
+
+
     </div>
-    <?php endif; ?>
+</div>
+<?php endif; ?>
+
 
 </div> <!-- /container -->
 
