@@ -55,17 +55,22 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
 <?php
 // Buyer links
 if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
-  echo('
-    <li class="nav-item mx-1">
-      <a class="nav-link" href="mybids.php"><i class="fa fa-gavel"></i>My Bids</a>
-    </li>
-    <li class="nav-item mx-1">
-      <a class="nav-link" href="recommendations.php"><i class="fa fa-bullseye"></i>Recommended</a>
-    </li>
-    <li class="nav-item mx-1">
-      <a class="nav-link" href="mywatchlist.php"><i class="fa fa-star"></i>My Watchlist</a>
-    </li>');
+    echo('
+        <li class="nav-item mx-1">
+            <a class="nav-link" href="mybids.php"><i class="fa fa-gavel"></i> My Bids</a>
+        </li>
+        <li class="nav-item mx-1">
+            <a class="nav-link" href="recommendations.php"><i class="fa fa-bullseye"></i> Recommended</a>
+        </li>
+        <li class="nav-item mx-1">
+            <a class="nav-link" href="mywatchlist.php"><i class="fa fa-star"></i> My Watchlist</a>
+        </li>
+        <li class="nav-item mx-1">
+            <a class="nav-link" href="myreports.php"><i class="fa fa-flag"></i> My Reports</a>
+        </li>
+    ');
 }
+
 
 // Seller links
 if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
