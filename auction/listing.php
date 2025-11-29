@@ -56,7 +56,7 @@ $image_path  = $row['image_path'] ?? null; // 获取图片路径
 
 // Compute basic bid statistics for this auction
 $sql_bid = "
-    SELECT 
+    SELECT
       COUNT(*) AS num_bids,
       MAX(bid_amount) AS max_bid
     FROM bids
@@ -69,6 +69,23 @@ $max_bid  = $bid_row['max_bid'];
 
 // Determine current price: max bid or start_price
 $current_price = ($max_bid === null) ? $start_price : (float)$max_bid;
+
+// Get current winner (leading bidder)
+$current_winner = null;
+if ($num_bids > 0) {
+    $sql_winner = "
+        SELECT u.name
+        FROM bids b
+        JOIN users u ON b.buyer_id = u.user_id
+        WHERE b.auction_id = ?
+        ORDER BY b.bid_amount DESC, b.bid_time ASC
+        LIMIT 1
+    ";
+    $result_winner = db_query($sql_winner, 'i', [$auction_id]);
+    if ($result_winner && $winner_row = $result_winner->fetch_assoc()) {
+        $current_winner = $winner_row['name'];
+    }
+}
 
 $has_session = is_logged_in();
 $watching = false;
@@ -132,18 +149,19 @@ if ($result_history && $result_history->num_rows > 0) {
 
     <div class="row">
         
-       <div class="col-md-6 mb-4">
-    <?php 
-        if (!empty($image_path) && file_exists($image_path)) {
-            echo '<div style="border: 2px solid var(--color-accent); border-radius: 6px; overflow: hidden; box-shadow: 0 0 30px rgba(227, 0, 34, 0.2);">';
-            echo '  <img src="' . htmlspecialchars($image_path) . '" alt="Item Image" style="width: 100%; height: 500px; object-fit: cover;">';
-            echo '</div>';
-        } else {
-            echo '<div class="img-placeholder-lg" style="height: 500px;"></div>';
-        }
-    ?>
-</div>
-
+        <div class="col-md-6 mb-4">
+            <?php 
+                if (!empty($image_path) && file_exists("images/" . $image_path)) {
+                    // 有图
+                    echo '<div style="border: 2px solid var(--color-accent); border-radius: 6px; overflow: hidden; box-shadow: 0 0 30px rgba(227, 0, 34, 0.2);">';
+                    echo '  <img src="images/' . $image_path . '" alt="Item Image" style="width: 100%; height: 500px; object-fit: cover;">';
+                    echo '</div>';
+                } else {
+                    // 无图：显示斯塔克占位符
+                    echo '<div class="img-placeholder-lg" style="height: 500px;"></div>';
+                }
+            ?>
+        </div>
 
         <div class="col-md-6">
             
@@ -196,6 +214,11 @@ if ($result_history && $result_history->num_rows > 0) {
                         <h1 style="color: var(--color-accent); font-family: 'Oswald', sans-serif; font-size: 3rem; margin: 0;">
                             £<?php echo number_format($current_price, 2); ?>
                         </h1>
+                        <?php if ($current_winner): ?>
+                            <p class="text-info mb-0" style="font-size: 0.9rem; margin-top: 0.5rem;">
+                                <i class="fas fa-trophy"></i> Leading: <strong><?php echo htmlspecialchars($current_winner); ?></strong>
+                            </p>
+                        <?php endif; ?>
                     </div>
 
                     <form method="POST" action="place_bid.php" class="mb-3">

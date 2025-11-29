@@ -245,7 +245,7 @@ function display_time_remaining($interval) {
 
 // print_listing_li:
 // This function prints an HTML <li> element containing an auction listing
-function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time, $image_path = null)
+function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time, $image_path = null, $current_winner = null)
 {
   // --- 1. 保持你原有的截断逻辑 ---
   if (strlen($desc) > 250) {
@@ -302,8 +302,9 @@ function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time,
     
     <div class="text-center text-nowrap">
         <span style="font-size: 1.5em; color: var(--color-accent); font-weight:bold;">£' . number_format($price, 2) . '</span><br/>
-        ' . $num_bids . $bid . '<br/>
-        ' . $time_remaining . '
+        ' . $num_bids . $bid . '<br/>'
+        . ($current_winner ? '<span class="text-info small">Leading: ' . htmlspecialchars($current_winner) . '</span><br/>' : '') .
+        $time_remaining . '
     </div>
   </li>'
   );
