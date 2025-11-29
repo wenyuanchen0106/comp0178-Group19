@@ -92,7 +92,7 @@ if ($result && $result->num_rows > 0) {
 }
 
 // 7. 创建用户 (插入数据库)
-$passwordHash = hash('sha256', $password); // 注意：这里要和你 login.php 里的加密方式一致。如果是 SHA2，就用 hash；如果是 password_hash，就用 password_verify。假设你之前用的是 SHA2。
+$passwordHash = password_hash($password, PASSWORD_DEFAULT); // 使用 PHP 的安全密码哈希函数
 
 // ✅ 修正：使用用户输入的 $name，而不是 $email
 db_execute(
