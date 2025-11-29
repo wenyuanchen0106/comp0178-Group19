@@ -132,19 +132,18 @@ if ($result_history && $result_history->num_rows > 0) {
 
     <div class="row">
         
-        <div class="col-md-6 mb-4">
-            <?php 
-                if (!empty($image_path) && file_exists("images/" . $image_path)) {
-                    // 有图
-                    echo '<div style="border: 2px solid var(--color-accent); border-radius: 6px; overflow: hidden; box-shadow: 0 0 30px rgba(227, 0, 34, 0.2);">';
-                    echo '  <img src="images/' . $image_path . '" alt="Item Image" style="width: 100%; height: 500px; object-fit: cover;">';
-                    echo '</div>';
-                } else {
-                    // 无图：显示斯塔克占位符
-                    echo '<div class="img-placeholder-lg" style="height: 500px;"></div>';
-                }
-            ?>
-        </div>
+       <div class="col-md-6 mb-4">
+    <?php 
+        if (!empty($image_path) && file_exists($image_path)) {
+            echo '<div style="border: 2px solid var(--color-accent); border-radius: 6px; overflow: hidden; box-shadow: 0 0 30px rgba(227, 0, 34, 0.2);">';
+            echo '  <img src="' . htmlspecialchars($image_path) . '" alt="Item Image" style="width: 100%; height: 500px; object-fit: cover;">';
+            echo '</div>';
+        } else {
+            echo '<div class="img-placeholder-lg" style="height: 500px;"></div>';
+        }
+    ?>
+</div>
+
 
         <div class="col-md-6">
             
