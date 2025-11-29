@@ -1,6 +1,7 @@
 <?php
-require_once 'utilities.php'; 
-close_expired_auctions();     
+require_once 'utilities.php';
+close_expired_auctions();
+activate_pending_auctions();
 // 先给三个变量一个默认值，避免上面的表单里 echo 未定义变量
 $keyword  = isset($_GET['keyword'])   ? trim($_GET['keyword'])   : '';
 $category = isset($_GET['cat'])       ? $_GET['cat']             : 'all';

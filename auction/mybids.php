@@ -8,6 +8,7 @@ require_once 'utilities.php';
 
 // Close expired auctions before showing bids
 close_expired_auctions();
+activate_pending_auctions();
 
 // Include page header
 include_once 'header.php';

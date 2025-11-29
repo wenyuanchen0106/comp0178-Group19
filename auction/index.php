@@ -5,6 +5,10 @@ require_once 'utilities.php';
 if(function_exists('close_expired_auctions')) {
     close_expired_auctions();
 }
+// 激活已到开始时间的pending拍卖
+if(function_exists('activate_pending_auctions')) {
+    activate_pending_auctions();
+}
 
 // 查询首页展示的 10 个热门/即将结束的拍卖
 // ✅ 修正 1: 加上了 i.image_path

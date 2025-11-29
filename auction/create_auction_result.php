@@ -26,12 +26,13 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
 } else {
 
     // ------------ 2. 读取并清洗表单数据 -----------------
-    $title         = trim($_POST['title']         ?? '');
-    $details       = trim($_POST['details']       ?? '');
-    $category_raw  = $_POST['category']           ?? '';
-    $start_price   = $_POST['start_price']        ?? '';
-    $reserve_price = $_POST['reserve_price']      ?? '';
-    $end_date_raw  = trim($_POST['end_date']      ?? '');
+    $title          = trim($_POST['title']         ?? '');
+    $details        = trim($_POST['details']       ?? '');
+    $category_raw   = $_POST['category']           ?? '';
+    $start_price    = $_POST['start_price']        ?? '';
+    $reserve_price  = $_POST['reserve_price']      ?? '';
+    $start_date_raw = trim($_POST['start_date']    ?? '');
+    $end_date_raw   = trim($_POST['end_date']      ?? '');
 
     $errors = [];
 
@@ -55,14 +56,26 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
         $errors[] = 'Reserve price must be a non-negative number (or left empty).';
     }
 
+    // 开始时间检查：datetime-local 传过来类似 2025-11-20T23:59
+    $now = date('Y-m-d H:i:s');
+    if ($start_date_raw === '') {
+        // 如果没有指定开始时间，默认为当前时间
+        $start_date = $now;
+    } else {
+        $start_date = str_replace('T', ' ', $start_date_raw) . ':00';   // 转成 MySQL DATETIME
+    }
+
     // 结束时间检查：datetime-local 传过来类似 2025-11-20T23:59
     if ($end_date_raw === '') {
         $errors[] = 'End date/time is required.';
     } else {
         $end_date = str_replace('T', ' ', $end_date_raw) . ':00';   // 转成 MySQL DATETIME
-        $now      = date('Y-m-d H:i:s');
         if ($end_date <= $now) {
             $errors[] = 'End time must be in the future.';
+        }
+        // 验证开始时间必须早于结束时间
+        if ($start_date >= $end_date) {
+            $errors[] = 'Start time must be before end time.';
         }
     }
 
@@ -136,8 +149,10 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
         // （2）插入 auctions
         $start_price_f   = (float)$start_price;
         $reserve_price_f = ($reserve_price === '' ? null : (float)$reserve_price);
-        $start_date      = date('Y-m-d H:i:s');
-        $status          = 'active';
+
+        // 根据开始时间决定初始状态
+        // 如果开始时间在未来，状态为 'pending'；否则为 'active'
+        $status = ($start_date > $now) ? 'pending' : 'active';
 
         // 注意 reserve_price 可能为 NULL，所以这里分情况
         if ($reserve_price_f === null) {

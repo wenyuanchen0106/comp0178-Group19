@@ -8,6 +8,7 @@ require_once 'utilities.php';
 
 // Close any expired auctions when loading the listing page
 close_expired_auctions();
+activate_pending_auctions();
 
 // Include common header
 include_once 'header.php';

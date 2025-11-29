@@ -142,12 +142,22 @@
           </div>
         </div>
         <div class="form-group row">
+          <label for="auctionStartDate" class="col-sm-2 col-form-label text-right">Start date</label>
+          <div class="col-sm-10">
+            <input type="datetime-local"
+                   class="form-control"
+                   id="auctionStartDate"
+                   name="start_date">
+            <small id="startDateHelp" class="form-text text-muted">Optional. When the auction should start. Leave empty to start immediately.</small>
+          </div>
+        </div>
+        <div class="form-group row">
           <label for="auctionEndDate" class="col-sm-2 col-form-label text-right">End date</label>
           <div class="col-sm-10">
             <input type="datetime-local"
                    class="form-control"
                    id="auctionEndDate"
-                   name="end_date"                   
+                   name="end_date"
                    required>
             <small id="endDateHelp" class="form-text text-muted"><span class="text-danger">* Required.</span> Day for the auction to end.</small>
           </div>

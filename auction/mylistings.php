@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 
 require_once 'utilities.php';
 close_expired_auctions();
+activate_pending_auctions();
 include_once 'header.php';
 
 // 1. Check user role (must be logged in as seller)
@@ -31,6 +32,7 @@ $sql = "
         i.title,
         a.auction_id,
         a.start_price,
+        a.start_date,
         a.end_date,
         a.status,
         a.winner_id,
@@ -52,6 +54,7 @@ $sql = "
         i.title,
         a.auction_id,
         a.start_price,
+        a.start_date,
         a.end_date,
         a.status,
         a.winner_id
@@ -101,8 +104,10 @@ if ($result && $result->num_rows > 0) {
           $title       = $row['title'];
           $start_price = (float)$row['start_price'];
           $num_bids    = (int)$row['num_bids'];
+          $start_date  = new DateTime($row['start_date']);
           $end_date    = new DateTime($row['end_date']);
           $now         = new DateTime();
+          $status      = $row['status'];
 
           $img_path = $row['image_path'] ?? null;
           $img_html = '';
@@ -112,11 +117,23 @@ if ($result && $result->num_rows > 0) {
               $img_html = '<div class="img-placeholder" style="width: 120px; height: 120px; margin: 0;"></div>';
           }
 
-          if ($now > $end_date) {
-              $time_remaining = 'Ending soon';
+          // 计算剩余时间
+          if ($status === 'pending') {
+              // Pending 状态：显示距离开始的时间
+              if ($now < $start_date) {
+                  $interval = date_diff($now, $start_date);
+                  $time_info = display_time_remaining($interval) . ' until start';
+              } else {
+                  $time_info = 'Starting soon';
+              }
           } else {
-              $interval = date_diff($now, $end_date);
-              $time_remaining = display_time_remaining($interval) . ' remaining';
+              // Active 状态：显示距离结束的时间
+              if ($now > $end_date) {
+                  $time_info = 'Ending soon';
+              } else {
+                  $interval = date_diff($now, $end_date);
+                  $time_info = display_time_remaining($interval) . ' remaining';
+              }
           }
       ?>
         <li class="list-group-item d-flex align-items-center" 
@@ -133,8 +150,13 @@ if ($result && $result->num_rows > 0) {
                 </a>
               </h5>
               <div class="text-muted small">
-                Ends: <?php echo $end_date->format('j M H:i'); ?> <br>
-                <span class="text-warning"><?php echo $time_remaining; ?></span>
+                <?php if ($status === 'pending'): ?>
+                  Starts: <?php echo $start_date->format('j M H:i'); ?> <br>
+                  <span class="text-info"><?php echo $time_info; ?></span>
+                <?php else: ?>
+                  Ends: <?php echo $end_date->format('j M H:i'); ?> <br>
+                  <span class="text-warning"><?php echo $time_info; ?></span>
+                <?php endif; ?>
               </div>
           </div>
           
@@ -146,7 +168,11 @@ if ($result && $result->num_rows > 0) {
               
               <div class="btn-group-vertical">
                 <a href="listing.php?item_id=<?php echo $item_id; ?>" class="btn btn-sm btn-outline-light mb-1">View</a>
-                <button class="btn btn-sm btn-danger" onclick="endAuction(<?php echo $item_id; ?>)">End Now</button>
+                <?php if ($status === 'pending'): ?>
+                  <button class="btn btn-sm btn-warning" onclick="cancelAuction(<?php echo $item_id; ?>)">Cancel</button>
+                <?php else: ?>
+                  <button class="btn btn-sm btn-danger" onclick="endAuction(<?php echo $item_id; ?>)">End Now</button>
+                <?php endif; ?>
               </div>
           </div>
         </li>
@@ -158,6 +184,12 @@ if ($result && $result->num_rows > 0) {
   function endAuction(itemId) {
     if (confirm('Are you sure you want to end this auction now?')) {
       window.location.href = 'end_auction.php?item_id=' + itemId;
+    }
+  }
+
+  function cancelAuction(itemId) {
+    if (confirm('Are you sure you want to cancel this pending auction?')) {
+      window.location.href = 'cancel_auction.php?item_id=' + itemId;
     }
   }
   </script>

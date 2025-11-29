@@ -205,6 +205,20 @@ function close_expired_auctions() {
     }
 }
 
+// 自动把已经到开始时间的 pending 拍卖改成 active
+function activate_pending_auctions() {
+    $now = date('Y-m-d H:i:s');
+
+    // 找所有开始时间已到但状态仍为 pending 的拍卖
+    $sql = "
+        UPDATE auctions
+        SET status = 'active'
+        WHERE status = 'pending'
+          AND start_date <= ?
+    ";
+    db_execute($sql, 's', [$now]);
+}
+
 
 //原有功能和模版
 
