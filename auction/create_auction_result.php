@@ -56,6 +56,13 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
         $errors[] = 'Reserve price must be a non-negative number (or left empty).';
     }
 
+    // 验证保留价必须大于或等于起始价
+    if ($reserve_price !== '' && is_numeric($reserve_price) && is_numeric($start_price)) {
+        if ((float)$reserve_price < (float)$start_price) {
+            $errors[] = 'Reserve price must be greater than or equal to starting price.';
+        }
+    }
+
     // 开始时间检查：datetime-local 传过来类似 2025-11-20T23:59
     $now = date('Y-m-d H:i:s');
     if ($start_date_raw === '') {
