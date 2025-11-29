@@ -47,7 +47,7 @@ include_once("header.php");
                       name="details"
                       rows="4"
                       required></textarea>
-            <small id="detailsHelp" class="form-text text-muted">Full details of the listing to help bidders decide if it's what they're looking for.</small>
+            <small id="detailsHelp" class="form-text text-muted"><span class="text-danger">* Required.</span> Full details of the listing to help bidders decide if it's what they're looking for.</small>
           </div>
         </div>
 

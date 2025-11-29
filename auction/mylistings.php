@@ -104,10 +104,14 @@ if ($result && $result->num_rows > 0) {
           $title       = $row['title'];
           $start_price = (float)$row['start_price'];
           $num_bids    = (int)$row['num_bids'];
+          $max_bid     = $row['max_bid'] !== null ? (float)$row['max_bid'] : null;
           $start_date  = new DateTime($row['start_date']);
           $end_date    = new DateTime($row['end_date']);
           $now         = new DateTime();
           $status      = $row['status'];
+
+          // 计算当前价格
+          $current_price = ($max_bid !== null) ? $max_bid : $start_price;
 
           $img_path = $row['image_path'] ?? null;
           $img_html = '';
@@ -161,10 +165,30 @@ if ($result && $result->num_rows > 0) {
           </div>
           
           <div class="text-right">
-              <div class="mb-2" style="font-size: 1.2rem; font-weight: bold; color: var(--color-accent);">
-                  £<?php echo number_format($start_price, 2); ?>
-              </div>
-              <div class="text-muted small mb-2"><?php echo $num_bids; ?> bid(s)</div>
+              <?php if ($status === 'pending'): ?>
+                  <!-- Pending: 只显示起拍价 -->
+                  <div class="mb-2" style="font-family: 'Oswald', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--color-accent); letter-spacing: 0.5px;">
+                      £<?php echo number_format($start_price, 2); ?>
+                  </div>
+                  <div class="text-muted small mb-2">Starting price</div>
+              <?php else: ?>
+                  <!-- Active: 显示现价和起拍价 -->
+                  <div class="mb-1" style="font-family: 'Oswald', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--color-accent); letter-spacing: 0.5px;">
+                      £<?php echo number_format($current_price, 2); ?>
+                  </div>
+                  <div class="text-muted small mb-2">
+                      <?php if ($num_bids > 0): ?>
+                          Current price (<?php echo $num_bids; ?> bid<?php echo $num_bids > 1 ? 's' : ''; ?>)
+                      <?php else: ?>
+                          No bids yet
+                      <?php endif; ?>
+                  </div>
+                  <?php if ($num_bids > 0): ?>
+                      <div class="text-muted small" style="font-size: 0.85rem;">
+                          Start: £<?php echo number_format($start_price, 2); ?>
+                      </div>
+                  <?php endif; ?>
+              <?php endif; ?>
               
               <div class="btn-group-vertical">
                 <a href="listing.php?item_id=<?php echo $item_id; ?>" class="btn btn-sm btn-outline-light mb-1">View</a>
