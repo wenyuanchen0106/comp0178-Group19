@@ -491,3 +491,49 @@ ul.list-group {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* =========================================
+   15. 修复文件上传框 (File Input Styling)
+   ========================================= */
+
+/* 1. 输入框主体：变黑 */
+.custom-file-label {
+    background-color: var(--color-bg-input) !important; /* 深色背景 */
+    color: var(--color-text-light) !important;          /* 浅色文字 */
+    border: 1px solid #444 !important;                  /* 深灰边框 */
+    border-radius: 4px;
+    box-shadow: none !important;
+}
+
+/* 2. 右边的 "Browse" 按钮：变深色 + 金字 */
+.custom-file-label::after {
+    background-color: #38383b !important;               /* 比背景稍亮的灰色 */
+    color: var(--color-accent) !important;              /* 金色文字 */
+    border-left: 1px solid #444 !important;
+    content: "Select File";                             /* 可选：改文字为更酷的 Select File */
+}
+
+/* 3. 鼠标悬停时的交互效果：发光 */
+.custom-file-input:hover ~ .custom-file-label {
+    border-color: var(--color-primary) !important;      /* 边框变红 */
+    box-shadow: 0 0 8px rgba(227, 0, 34, 0.3) !important; /* 红色微光 */
+}
+
+/* 4. 选中文件后的状态 */
+.custom-file-input:focus ~ .custom-file-label {
+    border-color: var(--color-accent) !important;       /* 聚焦时变金 */
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3) !important;
+}
+
+/* =========================================
+   16. 修复日期选择器 (Fix Date Picker)
+   ========================================= */
+
+/* 1. 这里的 color-scheme 删掉或注释掉，让日历变回默认的白色，保证清晰 */
+/* input[type="date"], ... { color-scheme: dark; } */
+
+/* 2. 依然保留这个，让输入框右边的小图标变成白色 (否则在深色背景下看不见) */
+::-webkit-calendar-picker-indicator {
+    filter: invert(1); 
+    cursor: pointer;
+}

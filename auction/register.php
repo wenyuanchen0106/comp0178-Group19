@@ -23,6 +23,15 @@
       </small>
     </div>
   </div>
+  <div class="form-group row">
+    <label for="name" class="col-sm-2 col-form-label text-right">Full Name</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Tony Stark" required>
+      <small id="nameHelp" class="form-text text-muted">
+        <span class="text-danger">* Required.</span> This name will be displayed publicly in bid history.
+      </small>
+    </div>
+  </div>
 
   <!-- email -->
   <div class="form-group row">

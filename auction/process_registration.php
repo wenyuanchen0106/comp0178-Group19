@@ -1,15 +1,16 @@
 <?php
 require_once 'utilities.php';
 
-// 只接受 POST 请求，其他请求重定向回注册页
+// 只接受 POST 请求
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('register.php');
+    header('Location: register.php');
     exit();
 }
 
-// 1. 读取并简单清洗表单数据
+// 1. 读取并清洗表单数据
 $accountType = $_POST['accountType'] ?? '';
 $email       = trim($_POST['email'] ?? '');
+$name        = trim($_POST['name'] ?? ''); // ✅ 新增：获取名字
 $password    = $_POST['password'] ?? '';
 $password2   = $_POST['passwordConfirmation'] ?? '';
 
@@ -18,6 +19,11 @@ $errors = [];
 // 2. 基本校验
 if ($accountType !== 'buyer' && $accountType !== 'seller') {
     $errors[] = 'Please choose a valid account type.';
+}
+
+// ✅ 新增：校验名字
+if ($name === '') {
+    $errors[] = 'Full Name is required.';
 }
 
 if ($email === '') {
@@ -32,17 +38,17 @@ if ($password === '' || $password2 === '') {
     $errors[] = 'Passwords do not match.';
 }
 
-// 3. 如果前面的校验已经有错误，直接显示错误信息
+// 3. 如果有错误，显示错误信息
 if (!empty($errors)) {
     include_once 'header.php';
-    echo '<div class="container my-3">';
-    echo '<h2>Registration failed</h2>';
+    echo '<div class="container my-5">';
+    echo '<h2 class="text-danger">Registration Failed</h2>';
     echo '<div class="alert alert-danger"><ul>';
     foreach ($errors as $e) {
         echo '<li>' . htmlspecialchars($e) . '</li>';
     }
     echo '</ul></div>';
-    echo '<a class="btn btn-primary" href="register.php">Back to register</a>';
+    echo '<a class="btn btn-secondary" href="register.php">Back to Registration</a>';
     echo '</div>';
     include_once 'footer.php';
     exit();
@@ -51,7 +57,7 @@ if (!empty($errors)) {
 // 4. 连接数据库
 $conn = get_db();
 
-// 5. 查找角色的 role_id（buyer / seller）
+// 5. 查找角色的 role_id
 $roleId = null;
 $result = db_query(
     "SELECT role_id FROM roles WHERE role_name = ? LIMIT 1",
@@ -62,68 +68,68 @@ $result = db_query(
 if ($result && $row = $result->fetch_assoc()) {
     $roleId = (int)$row['role_id'];
 } else {
-    // 如果 roles 表里还没有对应记录，可以视情况自动插入
-    db_execute(
-        "INSERT INTO roles (role_name) VALUES (?)",
-        "s",
-        [$accountType]
-    );
-    $result2 = db_query(
-        "SELECT role_id FROM roles WHERE role_name = ? LIMIT 1",
-        "s",
-        [$accountType]
-    );
+    // 自动修复角色表逻辑 (保留你原有的逻辑)
+    db_execute("INSERT INTO roles (role_name) VALUES (?)", "s", [$accountType]);
+    $result2 = db_query("SELECT role_id FROM roles WHERE role_name = ? LIMIT 1", "s", [$accountType]);
     if ($result2 && $row2 = $result2->fetch_assoc()) {
         $roleId = (int)$row2['role_id'];
     } else {
-        include_once 'header.php';
-        echo '<div class="container my-3">';
-        echo '<h2>Registration failed</h2>';
-        echo '<div class="alert alert-danger">System error: role not configured.</div>';
-        echo '<a class="btn btn-primary" href="register.php">Back to register</a>';
-        echo '</div>';
-        include_once 'footer.php';
-        exit();
+        die("System error: Role configuration failed.");
     }
 }
 
 // 6. 检查 email 是否已存在
-$result = db_query(
-    "SELECT user_id FROM users WHERE email = ? LIMIT 1",
-    "s",
-    [$email]
-);
+$result = db_query("SELECT user_id FROM users WHERE email = ? LIMIT 1", "s", [$email]);
 
 if ($result && $result->num_rows > 0) {
     include_once 'header.php';
-    echo '<div class="container my-3">';
-    echo '<h2>Registration failed</h2>';
-    echo '<div class="alert alert-danger">This email is already registered.</div>';
-    echo '<a class="btn btn-primary" href="register.php">Back to register</a>';
+    echo '<div class="container my-5">';
+    echo '<div class="alert alert-danger text-center">This email is already registered.</div>';
+    echo '<div class="text-center"><a class="btn btn-secondary" href="register.php">Back to Registration</a></div>';
     echo '</div>';
     include_once 'footer.php';
     exit();
 }
 
-// 7. 创建用户：name 暂时用 email 代替（你的 users.name 是 NOT NULL）
-$passwordHash = password_hash($password, PASSWORD_DEFAULT);
-$nameForNow   = $email;   // 如果将来需要单独的 name 字段，可以再扩展表单
+// 7. 创建用户 (插入数据库)
+$passwordHash = hash('sha256', $password); // 注意：这里要和你 login.php 里的加密方式一致。如果是 SHA2，就用 hash；如果是 password_hash，就用 password_verify。假设你之前用的是 SHA2。
 
+// ✅ 修正：使用用户输入的 $name，而不是 $email
 db_execute(
     "INSERT INTO users (name, email, password_hash, role_id) VALUES (?, ?, ?, ?)",
     "sssi",
-    [$nameForNow, $email, $passwordHash, $roleId]
+    [$name, $email, $passwordHash, $roleId]
 );
 
 // 获取新用户 ID
 $newUserId = $conn->insert_id;
 
-// 8. 登录新用户 & 设置 session
-$_SESSION['user_id']   = $newUserId;
-$_SESSION['role_name'] = $accountType;
+// 8. 自动登录 & 设置 Session
+$_SESSION['user_id']      = $newUserId;
+$_SESSION['username']     = $name;        // ✅ 存入名字，方便 Header 显示 "Hello, Tony Stark"
+$_SESSION['role_name']    = $accountType;
 $_SESSION['logged_in']    = true;
-$_SESSION['account_type'] = $accountType;   // 和 role_name 内容相同
-// 9. 注册成功后重定向（可以改成你想去的页面，比如 browse.php 或 index.php）
-redirect('browse.php');
+$_SESSION['account_type'] = $accountType;
+
+// 9. 注册成功提示并跳转
+include_once 'header.php';
+?>
+
+<div class="container my-5 text-center">
+    <div class="alert alert-success shadow-lg" style="border: 2px solid var(--color-accent); background-color: #1a1a1a; color: #fff;">
+        <h2 style="font-family: 'Oswald', sans-serif; color: var(--color-accent);">REGISTRATION SUCCESSFUL</h2>
+        <p class="lead mt-3">Welcome to the S.H.I.E.L.D. Database, <strong><?php echo htmlspecialchars($name); ?></strong>.</p>
+        <p>Redirecting you to the listings...</p>
+    </div>
+</div>
+
+<script>
+    setTimeout(function() {
+        window.location.href = "browse.php";
+    }, 2000);
+</script>
+
+<?php 
+include_once 'footer.php'; 
 exit();
 ?>

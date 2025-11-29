@@ -24,7 +24,7 @@
       before they try to send it, but that kind of functionality should be
       extremely low-priority / only done after all database functions are
       complete. -->
-      <form method="post" action="create_auction_result.php">
+      <form method="post" action="create_auction_result.php" enctype="multipart/form-data">
         <div class="form-group row">
           <label for="auctionTitle" class="col-sm-2 col-form-label text-right">Title of auction</label>
           <div class="col-sm-10">
@@ -47,6 +47,26 @@
                       required></textarea>
             <small id="detailsHelp" class="form-text text-muted">Full details of the listing to help bidders decide if it's what they're looking for.</small>
           </div>
+          <div class="form-group row">
+          <label for="auctionImage" class="col-sm-2 col-form-label text-right">Item Image</label>
+          <div class="col-sm-10">
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="auctionImage" name="auction_image" accept=".jpg, .jpeg, .png">
+              <label class="custom-file-label" for="auctionImage">Choose file (JPG/PNG)...</label>
+            </div>
+            <small class="form-text text-muted">Upload a clear image of your item.</small>
+          </div>
+        </div>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+                var fileName = document.getElementById("auctionImage").files[0].name;
+                var nextSibling = e.target.nextElementSibling;
+                nextSibling.innerText = fileName;
+            });
+        });
+        </script>
         </div>
         <div class="form-group row">
           <label for="auctionCategory" class="col-sm-2 col-form-label text-right">Category</label>

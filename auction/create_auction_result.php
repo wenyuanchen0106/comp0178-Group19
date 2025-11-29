@@ -96,20 +96,43 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
 /* TODO #3: If everything looks good, make the appropriate call to insert
             data into the database. */
             
+// =====================================
+        // NEW: 图片上传处理逻辑
+        // =====================================
+        $image_path = null; // 默认为空
 
+        // 检查是否有文件上传且无错误
+        if (isset($_FILES['auction_image']) && $_FILES['auction_image']['error'] == 0) {
+            $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+            $filename = $_FILES['auction_image']['name'];
+            $filetype = $_FILES['auction_image']['type'];
+            $filesize = $_FILES['auction_image']['size'];
+        
+            // 验证扩展名
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            if (in_array($ext, $allowed)) {
+                // 生成唯一文件名 (防止同名覆盖)
+                $new_filename = 'item_' . uniqid() . '.' . $ext;
+                $destination = 'images/' . $new_filename;
+
+                // 移动文件到 images 文件夹
+                if (move_uploaded_file($_FILES['auction_image']['tmp_name'], $destination)) {
+                    $image_path = $new_filename;
+                }
+            }
+        }
         // ------------ 4. 写入数据库：items + auctions -----------
 
-        // （1）插入 items
+      // (1) 插入 items (这是你刚才改好的部分)
         db_execute(
-            "INSERT INTO items (title, description, category_id, seller_id)
-             VALUES (?, ?, ?, ?)",
-            "ssii",
-            [$title, $details, $category_id, $seller_id]
+            "INSERT INTO items (title, description, image_path, category_id, seller_id)
+             VALUES (?, ?, ?, ?, ?)",
+            "sssii",
+            [$title, $details, $image_path, $category_id, $seller_id]
         );
 
-        $conn    = get_db();
-        $item_id = $conn->insert_id;   // 新插入的 item_id
-
+        $conn = get_db();
+        $item_id = $conn->insert_id; // 获取刚才插入的商品的 ID
         // （2）插入 auctions
         $start_price_f   = (float)$start_price;
         $reserve_price_f = ($reserve_price === '' ? null : (float)$reserve_price);
