@@ -8,6 +8,12 @@ if (!is_logged_in()) {
     die("You must be logged in to place a bid.");
 }
 
+// 1.5) Sellers cannot place bids - only buyers can bid
+$user_role = current_user_role();
+if ($user_role === 'seller') {
+    die("Sellers cannot place bids. Only buyers can participate in auctions.");
+}
+
 $user_id = current_user_id();
 
 // 2) 必须是 POST 提交

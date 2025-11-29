@@ -9,6 +9,13 @@ if (!is_logged_in()) {
     exit();
 }
 
+// Sellers cannot use watchlist - only buyers can watch auctions
+$user_role = current_user_role();
+if ($user_role === 'seller') {
+    echo "error";
+    exit();
+}
+
 if (!isset($_POST['functionname']) || !isset($_POST['arguments'])) {
     echo "error";
     exit();

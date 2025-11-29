@@ -20,6 +20,18 @@ if (!is_logged_in()) {
     exit();
 }
 
+// Sellers cannot access mybids page
+$user_role = current_user_role();
+if ($user_role === 'seller') {
+    echo '<div class="alert alert-warning text-center my-4">';
+    echo '<h4>Access Restricted</h4>';
+    echo '<p>Sellers cannot place bids. This page is only available for buyers.</p>';
+    echo '<p><a href="mylistings.php" class="btn btn-primary">View My Listings</a></p>';
+    echo '</div>';
+    include_once 'footer.php';
+    exit();
+}
+
 // Current user id
 $user_id = current_user_id();
 

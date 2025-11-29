@@ -10,6 +10,12 @@ if (!is_logged_in()) {
     die('You must be logged in to set an auto-bid.');
 }
 
+// 1.5 Sellers cannot set auto-bids - only buyers can bid
+$user_role = current_user_role();
+if ($user_role === 'seller') {
+    die('Sellers cannot set auto-bids. Only buyers can participate in auctions.');
+}
+
 // 只接受 POST 请求
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die('Invalid request method.');

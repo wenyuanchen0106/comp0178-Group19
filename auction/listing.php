@@ -170,7 +170,7 @@ if ($result_history && $result_history->num_rows > 0) {
                     <?php echo htmlspecialchars($title); ?>
                 </h2>
                 <div class="ml-3 align-self-center">
-                    <?php if ($has_session && $now < $end_time): ?>
+                    <?php if ($has_session && $now < $end_time && current_user_role() !== 'seller'): ?>
                         <div id="watch_nowatch" <?php if ($watching) echo 'style="display:none"'; ?>>
                             <button class="btn btn-outline-warning btn-sm" onclick="addToWatchlist()">+ Add to watchlist</button>
                         </div>
@@ -221,13 +221,14 @@ if ($result_history && $result_history->num_rows > 0) {
                         <?php endif; ?>
                     </div>
 
+                    <?php if (current_user_role() !== 'seller'): ?>
                     <form method="POST" action="place_bid.php" class="mb-3">
                         <input type="hidden" name="auction_id" value="<?php echo $auction_id; ?>">
                         <div class="input-group mb-2">
                             <div class="input-group-prepend">
                                 <span class="input-group-text border-0" style="background: #333; color: var(--color-accent);">£</span>
                             </div>
-                            <input type="number" class="form-control" name="bid_amount" 
+                            <input type="number" class="form-control" name="bid_amount"
                                    style="background: #222; color: #fff; border: 1px solid #444;"
                                    step="0.01" min="<?php echo $current_price + 0.01; ?>" required>
                         </div>
@@ -236,7 +237,7 @@ if ($result_history && $result_history->num_rows > 0) {
                         </button>
                     </form>
 
-                    <?php if ($has_session): ?>
+                    <?php if ($has_session && current_user_role() !== 'seller'): ?>
                         <div class="card bg-transparent border-0">
                             <div class="card-header p-0 bg-transparent border-0 text-center">
                                 <button class="btn btn-link text-muted text-decoration-none small" type="button" data-toggle="collapse" data-target="#collapseAutoBid">
@@ -262,6 +263,11 @@ if ($result_history && $result_history->num_rows > 0) {
                         </div>
                     <?php else: ?>
                         <p class="text-muted small text-center mt-3">Log in to set an auto-bid</p>
+                    <?php endif; ?>
+                    <?php else: ?>
+                        <div class="alert alert-info text-center" style="background: rgba(23, 162, 184, 0.1); border-color: #17a2b8;">
+                            <i class="fa fa-info-circle"></i> Sellers can only browse and view auctions. To place bids, please register as a buyer.
+                        </div>
                     <?php endif; ?>
 
                 <?php endif; ?>
