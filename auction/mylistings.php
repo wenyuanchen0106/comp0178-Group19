@@ -115,8 +115,8 @@ if ($result && $result->num_rows > 0) {
 
           $img_path = $row['image_path'] ?? null;
           $img_html = '';
-          if (!empty($img_path) && file_exists("images/" . $img_path)) {
-              $img_html = '<img src="images/' . $img_path . '" alt="Item" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
+          if (!empty($img_path) && file_exists($img_path)) {
+              $img_html = '<img src="' . htmlspecialchars($img_path) . '" alt="Item" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
           } else {
               $img_html = '<div class="img-placeholder" style="width: 120px; height: 120px; margin: 0;"></div>';
           }
@@ -235,8 +235,8 @@ if ($result && $result->num_rows > 0) {
 
           $img_path = $row['image_path'] ?? null;
           $img_html = '';
-          if (!empty($img_path) && file_exists("images/" . $img_path)) {
-              $img_html = '<img src="images/' . $img_path . '" alt="Item" style="width: 100px; height: 100px; object-fit: cover; opacity: 0.6;">';
+          if (!empty($img_path) && file_exists($img_path)) {
+              $img_html = '<img src="' . htmlspecialchars($img_path) . '" alt="Item" style="width: 100px; height: 100px; object-fit: cover; opacity: 0.6;">';
           } else {
               $img_html = '<div class="img-placeholder" style="width: 100px; height: 100px; margin: 0; opacity: 0.6;"></div>';
           }
@@ -285,3 +285,4 @@ if ($result && $result->num_rows > 0) {
 </div>
 
 <?php include_once 'footer.php'; ?>
+

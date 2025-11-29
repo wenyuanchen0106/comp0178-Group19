@@ -7,7 +7,6 @@ require_once 'utilities.php';
 include_once("header.php");
 ?>
 
-
 <div class="container my-5">
 
 <?php
@@ -17,9 +16,8 @@ include_once("header.php");
 /* TODO #1: Connect to MySQL database (perhaps by requiring a file that
             already does this). */
 
-
 // ------------ 1. 权限检查：必须是已登录的 seller -------------
-if (!is_logged_in() || current_user_role() !== 'seller') {
+if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') {
     echo '<div class="alert alert-danger text-center">
             You must be logged in as a seller to create an auction.
           </div>';
@@ -90,14 +88,11 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
     $category_id = (int)$category_raw;
     $seller_id   = current_user_id();
 
-    
 /* TODO #2: Extract form data into variables. Because the form was a 'post'
             form, its data can be accessed via $POST['auctionTitle'], 
             $POST['auctionDetails'], etc. Perform checking on the data to
             make sure it can be inserted into the database. If there is an
             issue, give some semi-helpful feedback to user. */
-
-
 
     // ------------ 3. 如果有错误，显示错误并不给插入 ----------
     if (!empty($errors)) {
@@ -112,38 +107,29 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
             </div>';
     } else {
 
-        
 /* TODO #3: If everything looks good, make the appropriate call to insert
             data into the database. */
-            
-// =====================================
-        // NEW: 图片上传处理逻辑
-        // =====================================
-        $image_path = null; // 默认为空
 
-        // 检查是否有文件上传且无错误
-        if (isset($_FILES['auction_image']) && $_FILES['auction_image']['error'] == 0) {
+        $image_path = null;
+
+        if (isset($_FILES['auction_image']) && $_FILES['auction_image']['error'] == UPLOAD_ERR_OK) {
             $allowed = ['jpg', 'jpeg', 'png', 'gif'];
             $filename = $_FILES['auction_image']['name'];
-            $filetype = $_FILES['auction_image']['type'];
-            $filesize = $_FILES['auction_image']['size'];
-        
-            // 验证扩展名
             $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             if (in_array($ext, $allowed)) {
-                // 生成唯一文件名 (防止同名覆盖)
+                $upload_dir = __DIR__ . '/images/';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0755, true);
+                }
                 $new_filename = 'item_' . uniqid() . '.' . $ext;
-                $destination = 'images/' . $new_filename;
-
-                // 移动文件到 images 文件夹
+                $destination = $upload_dir . $new_filename;
                 if (move_uploaded_file($_FILES['auction_image']['tmp_name'], $destination)) {
-                    $image_path = $new_filename;
+                    $image_path = 'images/' . $new_filename;
                 }
             }
         }
-        // ------------ 4. 写入数据库：items + auctions -----------
 
-      // (1) 插入 items (这是你刚才改好的部分)
+        // ------------ 4. 写入数据库：items + auctions -----------
         db_execute(
             "INSERT INTO items (title, description, image_path, category_id, seller_id)
              VALUES (?, ?, ?, ?, ?)",
@@ -152,23 +138,20 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
         );
 
         $conn = get_db();
-        $item_id = $conn->insert_id; // 获取刚才插入的商品的 ID
-        // （2）插入 auctions
+        $item_id = $conn->insert_id;
+
         $start_price_f   = (float)$start_price;
         $reserve_price_f = ($reserve_price === '' ? null : (float)$reserve_price);
 
-        // 根据开始时间决定初始状态
-        // 如果开始时间在未来，状态为 'pending'；否则为 'active'
         $status = ($start_date > $now) ? 'pending' : 'active';
 
-        // 注意 reserve_price 可能为 NULL，所以这里分情况
         if ($reserve_price_f === null) {
             db_execute(
                 "INSERT INTO auctions
                  (item_id, seller_id, start_price, reserve_price,
                   start_date, end_date, winner_id, status)
                  VALUES (?, ?, ?, NULL, ?, ?, NULL, ?)",
-                "iddsss",
+                "iidsss",
                 [$item_id, $seller_id, $start_price_f, $start_date, $end_date, $status]
             );
         } else {
@@ -177,25 +160,20 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
                  (item_id, seller_id, start_price, reserve_price,
                   start_date, end_date, winner_id, status)
                  VALUES (?, ?, ?, ?, ?, ?, NULL, ?)",
-                "idddsss",
+                "iiddsss",
                 [$item_id, $seller_id, $start_price_f, $reserve_price_f,
                  $start_date, $end_date, $status]
             );
         }
 
-// If all is successful, let user know.
-        // 成功信息 + 跳转链接（Starter 的 listing.php 用的是 item_id 参数）
+        // If all is successful, let user know.
         $link = 'listing.php?item_id=' . urlencode($item_id);
-
-
-
-echo('<div class="text-center">Auction successfully created! <a href="' . $link . '">View your new listing.</a></div>');
+        echo '<div class="text-center">Auction successfully created! <a href="' . $link . '">View your new listing.</a></div>';
     }
-}    
+}
 
 ?>
 
 </div>
-
 
 <?php include_once("footer.php")?>
