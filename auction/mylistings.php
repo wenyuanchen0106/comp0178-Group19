@@ -76,7 +76,12 @@ if ($result && $result->num_rows > 0) {
 
 <div class="container">
 
-<h2 class="my-3 text-uppercase" style="font-family: 'Oswald', sans-serif; letter-spacing: 1px;">My listings</h2>
+<div class="d-flex justify-content-between align-items-center my-3">
+  <h2 class="text-uppercase mb-0" style="font-family: 'Oswald', sans-serif; letter-spacing: 1px;">My listings</h2>
+  <a href="seller_stats.php" class="btn btn-primary">
+    <i class="fas fa-chart-bar"></i> View My Statistics
+  </a>
+</div>
 
 <?php if (empty($active) && empty($finished)): ?>
 
