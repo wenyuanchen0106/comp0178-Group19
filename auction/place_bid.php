@@ -1,15 +1,29 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// 处理用户出价 + eBay 风格的自动出价逻辑
 require_once 'utilities.php';
 
-// 1) 必须是登录状态
 if (!is_logged_in()) {
     die("You must be logged in to place a bid.");
 }
 
-// 1.5) Sellers and Admins cannot place bids - only buyers can bid
-$user_role = current_user_role();
+$user_role = null;
+if (function_exists('current_user_role')) {
+    $user_role = current_user_role();
+} elseif (isset($_SESSION['role_name'])) {
+    $user_role = $_SESSION['role_name'];
+} elseif (isset($_SESSION['role_id'])) {
+    if ($_SESSION['role_id'] == 1) {
+        $user_role = 'buyer';
+    } elseif ($_SESSION['role_id'] == 2) {
+        $user_role = 'seller';
+    } elseif ($_SESSION['role_id'] == 3) {
+        $user_role = 'admin';
+    }
+}
+
 if ($user_role === 'seller') {
     die("Access denied: This feature is only available to buyers.");
 }
@@ -19,12 +33,10 @@ if ($user_role === 'admin' || (isset($_SESSION['role_id']) && $_SESSION['role_id
 
 $user_id = current_user_id();
 
-// 2) 必须是 POST 提交
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die("Invalid request method.");
 }
 
-// 3) 从表单获取 auction_id 和 bid_amount
 if (!isset($_POST['auction_id']) || !isset($_POST['bid_amount'])) {
     die("Missing bid data.");
 }
@@ -36,7 +48,6 @@ if ($auction_id <= 0 || $bid_amount <= 0) {
     die("Invalid bid data.");
 }
 
-// 4) 查拍卖信息（包括 item_id, seller_id, start_price, end_date, status）
 $sql = "
     SELECT auction_id, item_id, seller_id, start_price, end_date, status
     FROM auctions
@@ -50,14 +61,12 @@ if (!$result || $result->num_rows === 0) {
 $auction = $result->fetch_assoc();
 $result->free();
 
-// 方便后面重定向回 listing.php
 $item_id     = (int)$auction['item_id'];
 $seller_id   = (int)$auction['seller_id'];
 $start_price = (float)$auction['start_price'];
 $end_time    = new DateTime($auction['end_date']);
 $status      = $auction['status'];
 
-// 5) 业务检查：拍卖状态、时间、不能给自己出价
 $now = new DateTime();
 
 if ($status !== 'active') {
@@ -72,7 +81,6 @@ if ($user_id === $seller_id) {
     die("You cannot bid on your own auction.");
 }
 
-// 6) 当前最高出价（如果没有出价，就用起拍价）
 $sql_max = "
     SELECT MAX(bid_amount) AS max_bid
     FROM bids
@@ -89,7 +97,6 @@ if ($max_bid === null) {
     $current_price = (float)$max_bid;
 }
 
-// 7) 校验：新出价必须严格大于当前最高价
 if ($bid_amount <= $current_price) {
     die(
         "Your bid must be greater than the current highest bid (£"
@@ -97,39 +104,32 @@ if ($bid_amount <= $current_price) {
     );
 }
 
-// 8) 插入一条新的“手动出价”记录
 $sql_insert = "
     INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
     VALUES (?, ?, ?, NOW())
 ";
 db_execute($sql_insert, 'iid', [$auction_id, $user_id, $bid_amount]);
-// ⭐ 给当前出价者发送通知
-send_notification(
-    $user_id,
-    "Bid placed successfully!",
-    "Your bid of £" . number_format($bid_amount, 2) . " has been placed.",
-    "listing.php?item_id=" . $item_id
-);
 
-// ⭐ 获取卖家 ID（必须从数据库获取）
-$seller_id = isset($auction['seller_id']) ? (int)$auction['seller_id'] : null;
-
-// ⭐ 若卖家不是自己，则通知卖家
-if ($seller_id && $seller_id != $user_id) {
+if (function_exists('send_notification')) {
     send_notification(
-        $seller_id,
-        "Your auction received a new bid!",
-        "Someone bid £" . number_format($bid_amount, 2) . " on your item.",
+        $user_id,
+        "Bid placed successfully!",
+        "Your bid of £" . number_format($bid_amount, 2) . " has been placed.",
         "listing.php?item_id=" . $item_id
     );
+
+    if ($seller_id && $seller_id != $user_id) {
+        send_notification(
+            $seller_id,
+            "Your auction received a new bid!",
+            "Someone bid £" . number_format($bid_amount, 2) . " on your item.",
+            "listing.php?item_id=" . $item_id
+        );
+    }
 }
 
-/*
- * 9) eBay 风格自动出价逻辑
- */
-
 $loop_guard = 0;
-$max_loops  = 50;  // 安全阀：一轮竞价最多自动抬价 50 次
+$max_loops  = 50;
 
 while (true) {
     $loop_guard++;
@@ -137,7 +137,6 @@ while (true) {
         break;
     }
 
-    // 9.1 查询当前最高出价（buyer_id + bid_amount）
     $sql_top = "
         SELECT buyer_id, bid_amount
         FROM bids
@@ -147,6 +146,9 @@ while (true) {
     ";
     $res_top = db_query($sql_top, 'i', [$auction_id]);
     if (!$res_top || $res_top->num_rows === 0) {
+        if ($res_top) {
+            $res_top->free();
+        }
         break;
     }
     $top = $res_top->fetch_assoc();
@@ -155,7 +157,6 @@ while (true) {
     $current_highest_bidder = (int)$top['buyer_id'];
     $current_highest_amount = (float)$top['bid_amount'];
 
-    // 9.2 查询该拍卖的所有自动出价设置
     $sql_ab = "
         SELECT user_id, max_amount, step
         FROM autobids
@@ -171,24 +172,21 @@ while (true) {
         break;
     }
 
-    $someone_bid = false;  // 标记这一轮里是否有任何人自动出价
+    $someone_bid = false;
 
     while ($ab = $res_ab->fetch_assoc()) {
         $ab_user = (int)$ab['user_id'];
         $max     = (float)$ab['max_amount'];
         $step    = (float)$ab['step'];
 
-        // 规则 1：当前最高出价人，本轮不再自动出价（防止自我抬价）
         if ($ab_user === $current_highest_bidder) {
             continue;
         }
 
-        // 规则 2：max_amount 必须高于当前价，否则没法继续加价
         if ($max <= $current_highest_amount) {
             continue;
         }
 
-        // 计算这次自动出价金额
         $auto_bid_amount = $current_highest_amount + $step;
         if ($auto_bid_amount > $max) {
             $auto_bid_amount = $max;
@@ -198,7 +196,6 @@ while (true) {
             continue;
         }
 
-        // 插入自动出价记录
         db_execute(
             "INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
              VALUES (?, ?, ?, NOW())",
@@ -219,5 +216,5 @@ while (true) {
     }
 }
 
-// 10) 所有出价（手动 + 自动）完成后，重定向回该商品详情页
 redirect("listing.php?item_id=" . $item_id);
+
