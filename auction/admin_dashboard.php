@@ -7,68 +7,100 @@ if ($_SESSION['role_name'] !== 'admin') {
     die("Access denied.");
 }
 
+/* ---------------------------
+   管理操作（删除、关闭、处理举报）
+---------------------------- */
+
 // 删除 Auction
 if (isset($_GET['delete_auction'])) {
     $auction_id = (int)$_GET['delete_auction'];
-    db_query("DELETE FROM auctions WHERE auction_id = ?", "i", [$auction_id]);
+    db_execute("DELETE FROM auctions WHERE auction_id = ?", "i", [$auction_id]);
+
     echo "<script>alert('Auction deleted successfully'); window.location='admin_dashboard.php';</script>";
     exit();
 }
 
-// 关闭 Auction
+// 关闭 Auction（设为 finished）
 if (isset($_GET['close_auction'])) {
     $auction_id = (int)$_GET['close_auction'];
-    db_query("UPDATE auctions SET status='finished', end_date=NOW() WHERE auction_id=?", "i", [$auction_id]);
+    db_execute("UPDATE auctions SET status='finished', end_date=NOW() WHERE auction_id = ?", "i", [$auction_id]);
+
     echo "<script>alert('Auction closed successfully'); window.location='admin_dashboard.php';</script>";
     exit();
 }
 
-// 驳回用户 Report
+// 驳回举报
 if (isset($_GET['dismiss_report'])) {
     $report_id = (int)$_GET['dismiss_report'];
-    db_query("UPDATE reports SET status='dismissed' WHERE report_id=?", "i", [$report_id]);
+    db_execute("UPDATE reports SET status='dismissed' WHERE report_id=?", "i", [$report_id]);
+
     echo "<script>alert('Report dismissed'); window.location='admin_dashboard.php';</script>";
     exit();
 }
 
-// 处理用户 Report（标为已处理）
+// 标记举报为已处理
 if (isset($_GET['resolve_report'])) {
     $report_id = (int)$_GET['resolve_report'];
-    db_query("UPDATE reports SET status='resolved' WHERE report_id=?", "i", [$report_id]);
+    db_execute("UPDATE reports SET status='resolved' WHERE report_id=?", "i", [$report_id]);
+
     echo "<script>alert('Report resolved'); window.location='admin_dashboard.php';</script>";
     exit();
 }
 
-// --- 获取所有拍卖 ---
-$auctions = db_query_all("SELECT auction_id, title, status FROM auctions ORDER BY auction_id DESC");
+/* ---------------------------
+   获取所有 Auctions
+---------------------------- */
+$auctions = db_fetch_all("
+    SELECT a.auction_id, a.status, i.title
+    FROM auctions a
+    JOIN items i ON a.item_id = i.item_id
+    ORDER BY a.auction_id DESC
+");
 
-// --- 获取所有 Report ---
-$reports = db_query_all("SELECT r.report_id, r.user_id, r.item_id, r.reason, r.status, r.created_at 
-                         FROM reports r ORDER BY r.created_at DESC");
+/* ---------------------------
+   获取所有 Reports（使用 description 字段）
+---------------------------- */
+$reports = db_fetch_all("
+    SELECT report_id, user_id, auction_id, item_id, description, status, created_at
+    FROM reports
+    ORDER BY report_id DESC
+");
 
 include 'header.php';
 ?>
 
 <div class="container mt-4">
     <h2>Admin Control Center</h2>
-
     <hr>
 
+    <!-- REPORTS -->
     <h3>📌 Manage Reports</h3>
+
     <table class="table table-dark table-striped">
         <thead>
             <tr>
-                <th>ID</th><th>User</th><th>Item</th><th>Reason</th><th>Status</th><th>Actions</th>
+                <th>ID</th>
+                <th>User</th>
+                <th>Auction</th>
+                <th>Item</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Actions</th>
             </tr>
         </thead>
+
         <tbody>
         <?php foreach ($reports as $rp): ?>
             <tr>
                 <td><?= $rp['report_id'] ?></td>
                 <td><?= $rp['user_id'] ?></td>
+                <td><?= $rp['auction_id'] ?></td>
                 <td><?= $rp['item_id'] ?></td>
-                <td><?= htmlspecialchars($rp['reason']) ?></td>
+                <td><?= htmlspecialchars($rp['description']) ?></td>
                 <td><?= $rp['status'] ?></td>
+                <td><?= $rp['created_at'] ?></td>
+
                 <td>
                     <a href="?resolve_report=<?= $rp['report_id'] ?>" class="btn btn-success btn-sm">Resolve</a>
                     <a href="?dismiss_report=<?= $rp['report_id'] ?>" class="btn btn-warning btn-sm">Dismiss</a>
@@ -78,21 +110,29 @@ include 'header.php';
         </tbody>
     </table>
 
+
     <hr>
 
+    <!-- AUCTIONS -->
     <h3>📌 Manage Auctions</h3>
+
     <table class="table table-dark table-striped">
         <thead>
             <tr>
-                <th>ID</th><th>Title</th><th>Status</th><th>Actions</th>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
+
         <tbody>
         <?php foreach ($auctions as $a): ?>
             <tr>
                 <td><?= $a['auction_id'] ?></td>
                 <td><?= htmlspecialchars($a['title']) ?></td>
                 <td><?= $a['status'] ?></td>
+
                 <td>
                     <a href="?close_auction=<?= $a['auction_id'] ?>" class="btn btn-primary btn-sm">Close</a>
                     <a href="?delete_auction=<?= $a['auction_id'] ?>" class="btn btn-danger btn-sm">Delete</a>
