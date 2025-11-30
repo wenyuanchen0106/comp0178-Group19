@@ -133,8 +133,13 @@ try {
 
 } catch (Exception $e) {
 
-    echo "<h1>Error:</h1>";
-    echo "<p>" . $e->getMessage() . "</p>";
+    error_log("Auction end error: " . $e->getMessage());
+
+    header("Location: mylistings.php");
     exit();
 }
+
+?>
+
+
 ?>

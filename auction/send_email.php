@@ -8,7 +8,6 @@ require 'phpmailer/src/SMTP.php';
 
 function sendEmail($to, $subject, $body) {
     $mail = new PHPMailer(true);
-    $mail->SMTPDebug = 2;   // ⭐ 启用详细错误输出
 
 
     try {
