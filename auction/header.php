@@ -120,6 +120,19 @@ if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
     </li>');
 }
 ?>
+<?php
+// Admin links
+if (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'admin') {
+    echo('
+        <li class="nav-item mx-1">
+            <a class="nav-link" href="admin_dashboard.php">
+                <i class="fa fa-shield"></i> Admin Panel
+            </a>
+        </li>
+    ');
+}
+?>
+
 
   </ul>
 </nav>
