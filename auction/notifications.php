@@ -2,7 +2,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-<?php
+
 require_once 'utilities.php';
 require_login();
 
@@ -14,7 +14,6 @@ $rows = db_query_all(
     [$uid]
 );
 
-// 标记已读
 db_query("UPDATE notifications SET is_read=1 WHERE user_id=?", "i", [$uid]);
 
 include 'header.php';
