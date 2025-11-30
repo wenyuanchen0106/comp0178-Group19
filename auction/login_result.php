@@ -78,11 +78,12 @@ if (!password_verify($password, $row['password_hash'])) {
 }
 
 // 5. 登录成功：设置统一的 session 变量（和 register 那边保持一致）
-$_SESSION['user_id']   = (int)$row['user_id'];
-$_SESSION['role_name'] = $row['role_name'];   // 'buyer' 或 'seller'
-$_SESSION['logged_in']    = true;
-$_SESSION['account_type'] = $row['role_name'];
+$_SESSION['user_id'] = $row['user_id'];
+$_SESSION['logged_in'] = true;
+$_SESSION['account_type'] = $row['role_name'];  // buyer / seller / admin
+$_SESSION['role_name'] = $row['role_name'];     // 一些 admin page 会用到
 $_SESSION['email'] = $email;
+
 // 6. 重定向到主页面（可以改成 index.php 或 mylistings.php）
 redirect('browse.php');
 exit();
