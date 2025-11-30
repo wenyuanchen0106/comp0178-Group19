@@ -100,6 +100,26 @@ $sql_insert = "
     VALUES (?, ?, ?, NOW())
 ";
 db_execute($sql_insert, 'iid', [$auction_id, $user_id, $bid_amount]);
+// ⭐ 给当前出价者发送通知
+send_notification(
+    $user_id,
+    "Bid placed successfully!",
+    "Your bid of £" . number_format($bid_amount, 2) . " has been placed.",
+    "listing.php?item_id=" . $item_id
+);
+
+// ⭐ 获取卖家 ID（必须从数据库获取）
+$seller_id = isset($auction['seller_id']) ? (int)$auction['seller_id'] : null;
+
+// ⭐ 若卖家不是自己，则通知卖家
+if ($seller_id && $seller_id != $user_id) {
+    send_notification(
+        $seller_id,
+        "Your auction received a new bid!",
+        "Someone bid £" . number_format($bid_amount, 2) . " on your item.",
+        "listing.php?item_id=" . $item_id
+    );
+}
 
 /*
  * 9) eBay 风格自动出价逻辑
