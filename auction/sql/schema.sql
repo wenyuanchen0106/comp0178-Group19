@@ -286,3 +286,20 @@ CREATE TABLE autobids (
 ) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;
+-- ===========================
+-- Notifications Table
+-- ===========================
+DROP TABLE IF EXISTS notifications;
+
+CREATE TABLE notifications (
+    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    link VARCHAR(255),
+    is_read TINYINT(1) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
