@@ -120,6 +120,23 @@ if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
     </li>');
 }
 ?>
+<?php
+// Admin links
+if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'admin') {
+    echo('
+        <li class="nav-item mx-1">
+            <a class="nav-link" href="admin_reports.php">
+                <i class="fa fa-warning"></i> Manage Reports
+            </a>
+        </li>
+        <li class="nav-item mx-1">
+            <a class="nav-link" href="admin_auctions.php">
+                <i class="fa fa-trash"></i> Manage Auctions
+            </a>
+        </li>
+    ');
+}
+?>
 
   </ul>
 </nav>
