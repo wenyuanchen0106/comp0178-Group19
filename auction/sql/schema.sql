@@ -1,8 +1,23 @@
--- 打开xampp后浏览器进入http://localhost/phpmyadmin
--- CREATE DATABASE IF NOT EXISTS auction_db 创建一个叫做auction_db 的表
---  DEFAULT CHARACTER SET utf8mb4   
---  DEFAULT COLLATE utf8mb4_unicode_ci;  编码选择utf8mb4_unicode_ci
--- 点SQL复制下面的并运行
+-- ========================================
+-- 拍卖系统数据库结构
+-- ========================================
+-- 使用方法：
+-- 1. 打开 xampp 后浏览器进入 http://localhost/phpmyadmin
+-- 2. 创建数据库：
+--    CREATE DATABASE IF NOT EXISTS auction_db
+--    DEFAULT CHARACTER SET utf8mb4
+--    DEFAULT COLLATE utf8mb4_unicode_ci;
+-- 3. 选择 auction_db 数据库
+-- 4. 点击 SQL 标签，复制下面的内容并运行
+--
+-- 主要功能：
+-- - 用户角色系统（买家、卖家、管理员）
+-- - 拍卖商品管理
+-- - 出价系统
+-- - 举报系统
+-- - 管理员审核和下架功能
+-- ========================================
+
 USE auction_db;
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -10,6 +25,10 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ==============
 -- roles
 -- ==============
+-- 系统角色：
+-- role_id=1: buyer (买家)
+-- role_id=2: seller (卖家)
+-- role_id=3: admin (管理员)
 DROP TABLE IF EXISTS roles;
 CREATE TABLE roles (
   role_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -87,7 +106,10 @@ CREATE TABLE auctions (
     start_date    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_date      DATETIME NOT NULL,
     winner_id     INT NULL,
-    status        ENUM('pending','active','finished','cancelled')
+    -- Status 说明:
+    -- pending: 待开始  active: 进行中  finished: 已结束
+    -- cancelled: 已取消  removed: 已下架（管理员操作）
+    status        ENUM('pending','active','finished','cancelled','removed')
                   NOT NULL DEFAULT 'pending',
 
     CONSTRAINT fk_auctions_item
@@ -299,7 +321,27 @@ CREATE TABLE notifications (
     link VARCHAR(255),
     is_read TINYINT(1) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
+
     FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- ========================================
+-- 数据库结构创建完成！
+-- ========================================
+--
+-- 下一步：
+-- 1. 运行 seed.sql 插入测试数据（可选）
+-- 2. 访问 create_initial_admin.php 创建管理员账号
+--
+-- 重要更新：
+-- ✓ auctions 表的 status 字段新增 'removed' 状态
+--   - 管理员可以将违规拍品标记为 'removed'
+--   - 已下架的拍品不会显示在浏览页面
+--
+-- ✓ roles 表支持三种角色：
+--   - buyer (role_id=1): 买家
+--   - seller (role_id=2): 卖家
+--   - admin (role_id=3): 管理员
+--
+-- ========================================

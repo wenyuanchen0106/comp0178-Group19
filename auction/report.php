@@ -2,6 +2,11 @@
 require_once 'utilities.php';
 require_login();
 
+// Admins cannot report auctions
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3) {
+    die("<p class='text-danger'>Access denied: This feature is only available to buyers.</p>");
+}
+
 $auction_id = isset($_GET['auction_id']) ? intval($_GET['auction_id']) : 0;
 $item_id    = isset($_GET['item_id']) ? intval($_GET['item_id']) : 0;
 

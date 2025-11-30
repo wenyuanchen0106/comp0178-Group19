@@ -9,7 +9,7 @@ USE auction_db;
 -- 如果已经存在同名 role_name，会被 UNIQUE 拦住，INSERT IGNORE 不会报错
 INSERT IGNORE INTO roles (role_name) VALUES 
 ('buyer'), 
-('seller'),
+('seller');
 
 
 -- 2) Demo 用户：一个买家 + 一个卖家

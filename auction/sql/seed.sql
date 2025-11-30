@@ -22,11 +22,15 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ================================
 INSERT INTO roles (role_name) VALUES
 ('buyer'),
-('seller');
+('seller'),
+('admin');
 
 -- ================================
 -- 2. Users (漫威角色)
 -- ================================
+-- ⚠️ 注意：这些用户使用SHA2哈希，仅用于测试
+-- 如果你的登录系统使用password_verify()，这些账号将无法登录
+-- 请通过注册功能创建新账号，或使用 create_initial_admin.php 创建管理员
 -- 密码全部是: password123
 INSERT INTO users (user_id, name, email, password_hash, role_id) VALUES
 (1, 'Peter Parker',   'spidey@avengers.com', SHA2('password123', 256), 1), -- 买家 (蜘蛛侠)
@@ -35,6 +39,8 @@ INSERT INTO users (user_id, name, email, password_hash, role_id) VALUES
 (4, 'Nick Fury',      'fury@shield.gov',     SHA2('password123', 256), 2), -- 卖家 (神盾局长)
 (5, 'Thor Odinson',   'thor@asgard.com',     SHA2('password123', 256), 1), -- 买家 (雷神)
 (6, 'Rocket Raccoon', 'rocket@guardians.gal',SHA2('password123', 256), 2); -- 卖家 (火箭浣熊)
+
+-- 注意：管理员账号请访问 create_initial_admin.php 创建
 
 -- ================================
 -- 3. Categories (超级英雄分类)
@@ -148,3 +154,61 @@ INSERT INTO reports (user_id, auction_id, item_id, description, status) VALUES
 INSERT INTO payments (user_id, auction_id, amount, payment_method, status, paid_at) VALUES
 -- Steve Rogers 支付了雷神之锤
 (2, 3, 3000.00, 'Stark Industries Credit', 'completed', NOW());
+
+-- ========================================
+-- 数据初始化完成！
+-- ========================================
+--
+-- ⚠️ 重要提醒：测试用户密码问题
+-- ========================================
+-- 上面插入的测试用户（user_id 1-6）使用 SHA2() 哈希
+-- 如果你的登录系统使用 password_verify()，这些账号将无法登录
+--
+-- 解决方案：
+-- 1. 通过网站注册功能创建新的买家/卖家账号
+-- 2. 或者修改 login_result.php 使用 SHA2 验证（不推荐）
+--
+-- ========================================
+-- 创建管理员账号
+-- ========================================
+--
+-- 由于管理员密码需要使用 PHP 的 password_hash() 函数，
+-- 无法在 SQL 中直接创建。请按以下步骤操作：
+--
+-- 方法1（推荐）：使用自动创建脚本
+-- ----------------------------------------
+-- 1. 访问: http://localhost/auction/create_initial_admin.php
+-- 2. 自动创建管理员账号:
+--    邮箱: admin@auction.com
+--    密码: password123
+-- 3. 创建成功后立即删除该文件（安全考虑）
+--
+-- 方法2：手动在数据库中修改
+-- ----------------------------------------
+-- 1. 先通过注册功能创建一个普通账号
+-- 2. 在 phpMyAdmin 中找到该用户记录
+-- 3. 将 role_id 改为 3
+-- 4. 重新登录即可获得管理员权限
+--
+-- 方法3：使用 manage_admins.php（需要先有管理员）
+-- ----------------------------------------
+-- 1. 先用方法1或方法2创建第一个管理员
+-- 2. 登录后访问 manage_admins.php
+-- 3. 可以创建更多管理员账号
+--
+-- ========================================
+-- 管理员功能说明
+-- ========================================
+--
+-- 管理员登录后可以：
+-- 1. 查看所有用户举报 (admin_reports.php)
+-- 2. 下架违规拍品 (将 status 改为 'removed')
+-- 3. 标记举报为已解决
+-- 4. 创建新的管理员账号 (manage_admins.php)
+--
+-- 管理员菜单会自动显示在导航栏：
+-- - Reports: 查看和处理举报
+-- - Admins: 管理管理员账号
+-- - Admin Panel: 管理员主页
+--
+-- ========================================

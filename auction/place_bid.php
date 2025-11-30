@@ -8,10 +8,13 @@ if (!is_logged_in()) {
     die("You must be logged in to place a bid.");
 }
 
-// 1.5) Sellers cannot place bids - only buyers can bid
+// 1.5) Sellers and Admins cannot place bids - only buyers can bid
 $user_role = current_user_role();
 if ($user_role === 'seller') {
-    die("Sellers cannot place bids. Only buyers can participate in auctions.");
+    die("Access denied: This feature is only available to buyers.");
+}
+if ($user_role === 'admin' || (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3)) {
+    die("Access denied: This feature is only available to buyers.");
 }
 
 $user_id = current_user_id();

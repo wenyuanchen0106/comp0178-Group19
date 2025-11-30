@@ -66,11 +66,16 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <ul class="navbar-nav align-middle">
 
+<?php
+// Browse 链接 - 只对buyer和seller显示，管理员不显示
+if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] != 3) {
+  echo('
     <li class="nav-item mx-1">
       <a class="nav-link" href="browse.php"><i class="fa fa-search"></i> Browse</a>
     </li>
+  ');
+}
 
-<?php
 // Buyer 专属链接
 if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
 
@@ -117,6 +122,17 @@ if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
       <a class="nav-link btn border-light" href="create_auction.php">
         <i class="fa fa-rocket"></i> Create Auction
       </a>
+    </li>');
+}
+
+// Admin links
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3) {
+  echo('
+    <li class="nav-item mx-1">
+      <a class="nav-link" href="admin_reports.php"><i class="fa fa-flag"></i> Reports</a>
+    </li>
+    <li class="nav-item mx-1">
+      <a class="nav-link" href="manage_admins.php"><i class="fa fa-users"></i> Admins</a>
     </li>');
 }
 ?>
