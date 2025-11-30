@@ -43,7 +43,7 @@ if (!empty($errors)) {
 
 // 3. 从数据库中查找用户（连 roles 一起查出）
 $sql = "
-    SELECT u.user_id, u.password_hash, r.role_name
+    SELECT u.user_id, u.password_hash, u.role_id, r.role_name, u.name
     FROM users u
     JOIN roles r ON u.role_id = r.role_id
     WHERE u.email = ?
@@ -82,6 +82,8 @@ $_SESSION['user_id'] = $row['user_id'];
 $_SESSION['logged_in'] = true;
 $_SESSION['account_type'] = $row['role_name'];  // buyer / seller / admin
 $_SESSION['role_name'] = $row['role_name'];     // 一些 admin page 会用到
+$_SESSION['role_id'] = $row['role_id'];         // 管理员权限检查需要
+$_SESSION['username'] = $row['name'];           // 用户名
 $_SESSION['email'] = $email;
 
 // 6. 重定向到主页面（可以改成 index.php 或 mylistings.php）

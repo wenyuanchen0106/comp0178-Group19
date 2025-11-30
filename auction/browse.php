@@ -1,5 +1,12 @@
 <?php
 require_once 'utilities.php';
+
+// 管理员不允许访问browse页面
+if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3) {
+    header('Location: admin_reports.php');
+    exit();
+}
+
 close_expired_auctions();
 activate_pending_auctions();
 

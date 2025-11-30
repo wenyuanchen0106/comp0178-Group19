@@ -25,7 +25,7 @@ if ($item_id <= 0) {
 // Fetch the latest auction for this item
 // ✅ 修正 1: 加上了 i.image_path
 $sql = "
-    SELECT 
+    SELECT
       a.auction_id,
       a.start_price,
       a.end_date,
@@ -53,6 +53,12 @@ $end_time    = new DateTime($row['end_date']);
 $status      = $row['status'];
 $winner_id   = $row['winner_id'] !== null ? (int)$row['winner_id'] : null;
 $image_path  = $row['image_path'] ?? null; // 获取图片路径
+
+// Check if auction is removed (only admins can view removed auctions)
+$is_admin = isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3;
+if ($status === 'removed' && !$is_admin) {
+    die('This auction has been removed by administrators.');
+}
 
 // Compute basic bid statistics for this auction
 $sql_bid = "
@@ -170,7 +176,7 @@ if ($result_history && $result_history->num_rows > 0) {
                     <?php echo htmlspecialchars($title); ?>
                 </h2>
                 <div class="ml-3 align-self-center">
-                    <?php if ($has_session && $now < $end_time && current_user_role() !== 'seller'): ?>
+                    <?php if ($has_session && $now < $end_time && current_user_role() !== 'seller' && current_user_role() !== 'admin'): ?>
                         <div id="watch_nowatch" <?php if ($watching) echo 'style="display:none"'; ?>>
                             <button class="btn btn-outline-warning btn-sm" onclick="addToWatchlist()">+ Add to watchlist</button>
                         </div>
@@ -221,7 +227,7 @@ if ($result_history && $result_history->num_rows > 0) {
                         <?php endif; ?>
                     </div>
 
-                    <?php if (current_user_role() !== 'seller'): ?>
+                    <?php if (current_user_role() !== 'seller' && current_user_role() !== 'admin'): ?>
                     <form method="POST" action="place_bid.php" class="mb-3">
                         <input type="hidden" name="auction_id" value="<?php echo $auction_id; ?>">
                         <div class="input-group mb-2">
@@ -237,7 +243,7 @@ if ($result_history && $result_history->num_rows > 0) {
                         </button>
                     </form>
 
-                    <?php if ($has_session && current_user_role() !== 'seller'): ?>
+                    <?php if ($has_session && current_user_role() !== 'seller' && current_user_role() !== 'admin'): ?>
                         <div class="card bg-transparent border-0">
                             <div class="card-header p-0 bg-transparent border-0 text-center">
                                 <button class="btn btn-link text-muted text-decoration-none small" type="button" data-toggle="collapse" data-target="#collapseAutoBid">
@@ -303,10 +309,10 @@ if ($result_history && $result_history->num_rows > 0) {
         </div>
 
         <div class="col-md-4 text-right">
-            <?php if ($has_session): ?>
+            <?php if ($has_session && current_user_role() !== 'admin'): ?>
                 <div class="mt-5 pt-3">
                     <p class="text-muted small mb-2">Is there an issue with this item?</p>
-                    <a href="report.php?auction_id=<?php echo urlencode($auction_id); ?>&item_id=<?php echo urlencode($item_id); ?>" 
+                    <a href="report.php?auction_id=<?php echo urlencode($auction_id); ?>&item_id=<?php echo urlencode($item_id); ?>"
                        class="btn btn-outline-danger btn-block" style="border-style: dashed;">
                        <i class="fa fa-flag"></i> Report this auction
                     </a>

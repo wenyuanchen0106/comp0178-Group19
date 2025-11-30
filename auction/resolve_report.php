@@ -2,8 +2,8 @@
 require_once 'utilities.php';
 require_login();
 
-// 管理员检查（假设 role_id=2 是 seller，role_id=1 是 buyer，管理员你自己定义）
-if ($_SESSION['role_id'] != 2) {
+// 管理员检查（role_id=3 是管理员）
+if ($_SESSION['role_id'] != 3) {
     die("<p class='text-danger'>Access denied: Admins only.</p>");
 }
 

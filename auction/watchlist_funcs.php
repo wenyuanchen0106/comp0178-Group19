@@ -9,9 +9,13 @@ if (!is_logged_in()) {
     exit();
 }
 
-// Sellers cannot use watchlist - only buyers can watch auctions
+// Sellers and Admins cannot use watchlist - only buyers can watch auctions
 $user_role = current_user_role();
 if ($user_role === 'seller') {
+    echo "error";
+    exit();
+}
+if ($user_role === 'admin' || (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3)) {
     echo "error";
     exit();
 }

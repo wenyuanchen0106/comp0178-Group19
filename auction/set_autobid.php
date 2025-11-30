@@ -10,10 +10,13 @@ if (!is_logged_in()) {
     die('You must be logged in to set an auto-bid.');
 }
 
-// 1.5 Sellers cannot set auto-bids - only buyers can bid
+// 1.5 Sellers and Admins cannot set auto-bids - only buyers can bid
 $user_role = current_user_role();
 if ($user_role === 'seller') {
-    die('Sellers cannot set auto-bids. Only buyers can participate in auctions.');
+    die('Access denied: This feature is only available to buyers.');
+}
+if ($user_role === 'admin' || (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3)) {
+    die('Access denied: This feature is only available to buyers.');
 }
 
 // 只接受 POST 请求

@@ -13,15 +13,16 @@ if ($_SESSION['role_id'] != 3) {
 
 include_once 'header.php';
 
-// 获取所有 OPEN 举报
+// 获取所有举报以及拍卖状态
 $sql = "
-    SELECT 
+    SELECT
         r.report_id,
         r.description,
         r.status,
         r.created_at,
         u.name AS reporter_name,
         a.auction_id,
+        a.status AS auction_status,
         i.title AS item_title
     FROM reports r
     LEFT JOIN users u ON r.user_id = u.user_id
@@ -66,10 +67,40 @@ $result = db_query($sql);
                         Reported at: <?= $row['created_at'] ?>
                     </p>
 
-                    <a href="resolve_report.php?report_id=<?= $row['report_id'] ?>" 
-                       class="btn btn-success btn-sm">
-                       Resolve
-                    </a>
+                    <?php if ($row['auction_status']): ?>
+                        <p class="mb-2">
+                            <strong>Auction Status:</strong>
+                            <span class="badge
+                                <?php
+                                    echo $row['auction_status'] === 'removed' ? 'bg-danger' :
+                                         ($row['auction_status'] === 'active' ? 'bg-success' :
+                                         ($row['auction_status'] === 'finished' ? 'bg-secondary' : 'bg-warning'));
+                                ?>">
+                                <?= strtoupper($row['auction_status']) ?>
+                            </span>
+                        </p>
+                    <?php endif; ?>
+
+                    <div class="btn-group" role="group">
+                        <?php if ($row['status'] === 'open'): ?>
+                            <a href="resolve_report.php?report_id=<?= $row['report_id'] ?>"
+                               class="btn btn-success btn-sm">
+                               <i class="fa fa-check"></i> Resolve
+                            </a>
+                        <?php endif; ?>
+
+                        <?php if ($row['auction_id'] && $row['auction_status'] !== 'removed'): ?>
+                            <a href="remove_auction.php?auction_id=<?= $row['auction_id'] ?>&report_id=<?= $row['report_id'] ?>"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Are you sure you want to remove this auction? This action cannot be undone.');">
+                               <i class="fa fa-ban"></i> Remove Auction
+                            </a>
+                        <?php elseif ($row['auction_status'] === 'removed'): ?>
+                            <span class="btn btn-secondary btn-sm disabled">
+                                <i class="fa fa-ban"></i> Already Removed
+                            </span>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         <?php endwhile; ?>
