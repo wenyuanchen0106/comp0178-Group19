@@ -1,6 +1,8 @@
 <?php
 require_once 'utilities.php';
 require_once 'notify.php';
+require_once 'send_email.php';
+
 
 $sql = "
 SELECT auctions.auction_id, auctions.title, bids.user_id
@@ -18,5 +20,17 @@ foreach ($rows as $r) {
         "The auction '{$r['title']}' will end in less than 30 minutes!",
         "listing.php?auction_id=" . $r['auction_id']
     );
+    // 获取用户邮箱
+$user = db_query_one("SELECT email, name FROM users WHERE user_id = ?", [$r['user_id']]);
+
+sendEmail(
+    $user['email'],
+    "⏰ Auction ending soon: {$r['title']}",
+    "Hi {$user['name']},\n\n" .
+    "The auction '{$r['title']}' will end within 30 minutes.\n" .
+    "Visit Stark Exchange to increase your bid.\n\n" .
+    "Best regards,\nStark Exchange Team"
+);
+
 }
 ?>
