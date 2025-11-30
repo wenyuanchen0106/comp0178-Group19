@@ -91,16 +91,39 @@ $sql = "
 $ok = db_query($sql, 'iids', [$user_id, $auction_id, $amount, $payment_method]);
 
 if ($ok) {
-    // Update auction status to 'paid' to reflect completed payment
+
+    // ⭐ 通知买家（当前用户）
+    send_notification(
+        $user_id,
+        "Payment Successful",
+        "Your payment of £" . number_format($amount, 2) . " for auction #$auction_id was successful.",
+        "mybids.php"
+    );
+
+    // ⭐ 查找卖家 ID
+    $sql_seller = "SELECT seller_id FROM auctions WHERE auction_id = ?";
+    $res_seller = db_query($sql_seller, 'i', [$auction_id]);
+    $row_seller = $res_seller->fetch_assoc();
+    $seller_id = (int)$row_seller['seller_id'];
+
+    // ⭐ 通知卖家
+    send_notification(
+        $seller_id,
+        "Item Paid",
+        "The buyer has successfully paid £" . number_format($amount, 2) . " for your auction item (auction #$auction_id).",
+        "mylistings.php"
+    );
+
+    // 更新拍卖状态
     $sql2 = "UPDATE auctions SET status = 'paid' WHERE auction_id = ?";
     db_query($sql2, 'i', [$auction_id]);
 
-    // Store success message in session (flash message)
-    $_SESSION['success_message'] = 'Payment successful.';
+    $_SESSION['success_message'] = 'Payment successful!';
+
 } else {
-    // If insert failed, store error message
     $_SESSION['error_message'] = 'Payment failed.';
 }
+
 
 // Redirect back to My Bids page where the flash message will be shown
 redirect('mybids.php');
