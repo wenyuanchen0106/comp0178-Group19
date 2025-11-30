@@ -16,13 +16,6 @@ CREATE TABLE roles (
   role_name VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 
--- add admin role
-INSERT IGNORE INTO roles (role_name) VALUES
-  ('buyer'),
-  ('seller'),
-  ('admin');
-
-
 -- ==============
 -- users
 -- ==============
