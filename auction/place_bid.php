@@ -4,6 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once 'utilities.php';
+require_once 'send_email.php';
 
 if (!is_logged_in()) {
     die("You must be logged in to place a bid.");
@@ -263,6 +264,27 @@ if ($prev_highest_bidder && $final_highest_bidder && $prev_highest_bidder !== $f
         "Your previous highest bid has been outbid. The current highest bid is £" . number_format($final_highest_amount, 2) . ".",
         "listing.php?item_id=" . $item_id
     );
+        // 2. Fetch email + name of the outbid buyer
+    $sql_old_user = "SELECT email, name FROM users WHERE user_id = ?";
+    $res_old_user = db_query($sql_old_user, "i", [$prev_highest_bidder]);
+    $old_user = $res_old_user->fetch_assoc();
+    $old_email = $old_user['email'];
+    $old_name  = $old_user['name'];
+
+    // 3. Email notification for the outbid buyer
+    if (function_exists('sendEmail')) {
+        sendEmail(
+            $old_email,
+            "⚠ You have been outbid",
+            "Hi {$old_name},\n\n".
+            "Your bid on auction #{$auction_id} has been outbid by another buyer.\n\n".
+            "Current highest bid: £" . number_format($final_highest_amount, 2) . "\n\n".
+            "Visit Stark Exchange to increase your bid and regain the lead:\n".
+            "https://localhost/comp0178-Group19/auction/listing.php?item_id={$item_id}\n\n".
+            "Best regards,\n".
+            "Stark Exchange Team"
+        );
+    }
 }
 
 redirect("listing.php?item_id=" . $item_id);
