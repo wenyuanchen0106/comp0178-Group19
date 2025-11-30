@@ -8,12 +8,21 @@ require_login();
 
 $uid = $_SESSION['user_id'];
 
-$rows = db_query_all(
+// 获取所有通知
+$rows = [];
+$result = db_query(
     "SELECT * FROM notifications WHERE user_id=? ORDER BY created_at DESC",
     "i",
     [$uid]
 );
 
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+    }
+}
+
+// 标记为已读
 db_query("UPDATE notifications SET is_read=1 WHERE user_id=?", "i", [$uid]);
 
 include 'header.php';
