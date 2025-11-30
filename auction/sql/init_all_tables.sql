@@ -10,7 +10,6 @@ USE auction_db;
 INSERT IGNORE INTO roles (role_name) VALUES 
 ('buyer'), 
 ('seller'),
-('admin');
 
 
 -- 2) Demo 用户：一个买家 + 一个卖家
@@ -29,14 +28,6 @@ VALUES
     '$2b$10$rydOVX41S3da.uTyPVd9Xe7Zj52MgH1/eeoqemBG7vDdmBeFYrhh2', -- 123123
     (SELECT role_id FROM roles WHERE role_name = 'seller' LIMIT 1)
   );
--- Default Admin Account
-INSERT IGNORE INTO users (name, email, password_hash, role_id)
-VALUES (
-  'Admin',
-  'admin@example.com',
-  SHA2('AdminPass123', 256),
-  (SELECT role_id FROM roles WHERE role_name = 'admin' LIMIT 1)
-);
 
 -- 3) 分类：基础几类
 -- 如果你之前已经插过同名 category_name，UNIQUE + INSERT IGNORE 会跳过，不会覆盖
