@@ -1,6 +1,6 @@
 <?php
 // admin_reports.php
-// 管理员查看所有举报并处理1
+// 管理员查看所有举报并处理
 
 require_once 'utilities.php';
 require_login(); // 必须登录
