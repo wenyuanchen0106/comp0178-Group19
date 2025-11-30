@@ -11,21 +11,28 @@ if(function_exists('activate_pending_auctions')) {
 }
 
 // 查询首页展示的 10 个热门/即将结束的拍卖
-// ✅ 修正 1: 加上了 i.image_path
+// 只显示 active 且未过期的拍卖
 $sql = "
-  SELECT 
+  SELECT
     a.auction_id,
     a.item_id,
     a.end_date,
     i.title,
     i.description,
-    i.image_path,  /* <--- 必须加上这一行！ */
+    i.image_path,
     COALESCE(MAX(b.bid_amount), a.start_price) AS current_price,
-    COUNT(b.bid_id) AS num_bids
+    COUNT(b.bid_id) AS num_bids,
+    (SELECT u.name
+     FROM bids b2
+     JOIN users u ON b2.buyer_id = u.user_id
+     WHERE b2.auction_id = a.auction_id
+     ORDER BY b2.bid_amount DESC, b2.bid_time ASC
+     LIMIT 1) AS current_winner
   FROM auctions a
   JOIN items i ON a.item_id = i.item_id
   LEFT JOIN bids b ON a.auction_id = b.auction_id
   WHERE a.status = 'active'
+    AND a.end_date > NOW()
   GROUP BY a.auction_id
   ORDER BY a.end_date ASC
   LIMIT 10
@@ -77,11 +84,10 @@ include_once 'header.php';
         $current_price = (float)$row['current_price'];
         $num_bids      = (int)$row['num_bids'];
         $end_date      = new DateTime($row['end_date']);
-        
-        // ✅ 修正 2: 顺便加上图片变量，确保万无一失
         $image_path    = $row['image_path'] ?? null;
+        $current_winner = $row['current_winner'] ?? null;
 
-        // 这里调用 utilities.php 里的函数输出列表项
+        // 调用 utilities.php 里的函数输出列表项
         if(function_exists('print_listing_li')) {
             print_listing_li(
               $item_id,
@@ -90,7 +96,8 @@ include_once 'header.php';
               $current_price,
               $num_bids,
               $end_date,
-              $image_path // <--- 现在这里有值了，不会报错了
+              $image_path,
+              $current_winner
             );
         } else {
             // 备用方案
