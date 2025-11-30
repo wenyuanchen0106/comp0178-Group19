@@ -52,12 +52,29 @@ $sql_winner = "
     LIMIT 1
 ";
 
+// 查找最高出价者
 $result_winner = db_query($sql_winner, "i", [$auction_id]);
 $winner_id = null;
 
 if ($result_winner && $result_winner->num_rows > 0) {
     $winner_row = $result_winner->fetch_assoc();
     $winner_id = (int)$winner_row['buyer_id'];
+
+    // ⭐ 给赢家发送通知
+    send_notification(
+        $winner_id,
+        "🎉 You won an auction!",
+        "You placed the highest bid and won this item!",
+        "listing.php?item_id=" . $item_id
+    );
+
+    // ⭐ 给卖家发送通知
+    send_notification(
+        $seller_id,
+        "✔ Your auction is finished",
+        "Your item has been successfully sold.",
+        "mylistings.php"
+    );
 }
 
 // 更新拍卖状态
@@ -71,7 +88,7 @@ if ($winner_id !== null) {
     ";
     db_execute($sql_update, "ii", [$winner_id, $auction_id]);
 } else {
-    // 没有出价者，只更新状态
+    // 没有出价者，更新状态
     $sql_update = "
         UPDATE auctions
         SET status = 'finished',
@@ -79,6 +96,14 @@ if ($winner_id !== null) {
         WHERE auction_id = ?
     ";
     db_execute($sql_update, "i", [$auction_id]);
+
+    // ⭐ 没人出价，通知卖家
+    send_notification(
+        $seller_id,
+        "Auction ended — No bids",
+        "Your auction ended but nobody bid.",
+        "mylistings.php"
+    );
 }
 
 // 重定向回 mylistings.php
