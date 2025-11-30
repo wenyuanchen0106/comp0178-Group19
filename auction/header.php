@@ -73,6 +73,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
 <?php
 // Buyer 专属链接
 if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
+
     echo('
         <li class="nav-item mx-1">
             <a class="nav-link" href="mybids.php"><i class="fa fa-gavel"></i> My Bids</a>
@@ -86,9 +87,25 @@ if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
         <li class="nav-item mx-1">
             <a class="nav-link" href="myreports.php"><i class="fa fa-flag"></i> My Reports</a>
         </li>
-    ');
-}
+        <li class="nav-item mx-1 position-relative">
+            <a class="nav-link" href="notifications.php">
+                <i class="fa fa-bell"></i> Notifications');
 
+    // ⭐ 插入红点提示（未读数量）
+    if (!empty($_SESSION['unread_notifications'])) {
+        echo '
+                <span class="badge badge-danger position-absolute"
+                      style="top: 0; right: 0; transform: translate(50%, -50%); font-size: 10px;">
+                    ' . $_SESSION['unread_notifications'] . '
+                </span>';
+    }
+
+    // 关闭标签
+    echo '
+            </a>
+        </li>
+    ';
+}
 
 // Seller links
 if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
