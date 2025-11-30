@@ -243,6 +243,17 @@ function display_time_remaining($interval) {
 
 }
 
+if (!function_exists('send_notification')) {
+    function send_notification($user_id, $title, $message, $link) {
+        db_execute(
+            "INSERT INTO notifications (user_id, title, message, link, is_read, created_at)
+             VALUES (?, ?, ?, ?, 0, NOW())",
+            "isss",
+            [$user_id, $title, $message, $link]
+        );
+    }
+}
+
 // print_listing_li:
 // This function prints an HTML <li> element containing an auction listing
 function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time, $image_path = null, $current_winner = null)

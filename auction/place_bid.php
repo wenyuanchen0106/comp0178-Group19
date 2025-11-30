@@ -104,6 +104,26 @@ if ($bid_amount <= $current_price) {
     );
 }
 
+$prev_highest_bidder = null;
+$prev_highest_amount = null;
+
+$sql_prev = "
+    SELECT buyer_id, bid_amount
+    FROM bids
+    WHERE auction_id = ?
+    ORDER BY bid_amount DESC, bid_time ASC
+    LIMIT 1
+";
+$res_prev = db_query($sql_prev, "i", [$auction_id]);
+if ($res_prev && $res_prev->num_rows > 0) {
+    $prev = $res_prev->fetch_assoc();
+    $prev_highest_bidder = (int)$prev['buyer_id'];
+    $prev_highest_amount = (float)$prev['bid_amount'];
+}
+if ($res_prev) {
+    $res_prev->free();
+}
+
 $sql_insert = "
     INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
     VALUES (?, ?, ?, NOW())
@@ -216,5 +236,35 @@ while (true) {
     }
 }
 
+$final_highest_bidder = null;
+$final_highest_amount = null;
+
+$sql_final = "
+    SELECT buyer_id, bid_amount
+    FROM bids
+    WHERE auction_id = ?
+    ORDER BY bid_amount DESC, bid_time ASC
+    LIMIT 1
+";
+$res_final = db_query($sql_final, "i", [$auction_id]);
+if ($res_final && $res_final->num_rows > 0) {
+    $final = $res_final->fetch_assoc();
+    $final_highest_bidder = (int)$final['buyer_id'];
+    $final_highest_amount = (float)$final['bid_amount'];
+}
+if ($res_final) {
+    $res_final->free();
+}
+
+if ($prev_highest_bidder && $final_highest_bidder && $prev_highest_bidder !== $final_highest_bidder && function_exists('send_notification')) {
+    send_notification(
+        $prev_highest_bidder,
+        "You have been outbid",
+        "Your previous highest bid has been outbid. The current highest bid is £" . number_format($final_highest_amount, 2) . ".",
+        "listing.php?item_id=" . $item_id
+    );
+}
+
 redirect("listing.php?item_id=" . $item_id);
+
 
