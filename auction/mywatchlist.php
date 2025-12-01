@@ -2,7 +2,6 @@
 require_once 'utilities.php';
 include_once 'header.php';
 
-// 1. 检查登录
 if (!is_logged_in()) {
     echo '<div class="alert alert-danger text-center my-4">Please log in to view your watchlist.</div>';
     include_once 'footer.php';
@@ -11,7 +10,6 @@ if (!is_logged_in()) {
 
 $user_id = current_user_id();
 
-/* 2. 查询 watchlist 列表 (包含 image_path) */
 $sql = "
     SELECT 
         w.auction_id,
@@ -19,8 +17,8 @@ $sql = "
         i.title, 
         i.image_path,
         i.description,
-        a.end_date,  -- 新增：获取截止时间，方便显示
-        a.status     -- 新增：获取状态
+        a.end_date,
+        a.status
     FROM watchlist w
     JOIN auctions a ON w.auction_id = a.auction_id
     JOIN items i ON a.item_id = i.item_id
@@ -50,15 +48,11 @@ $result = db_query($sql, "i", [$user_id]);
             $title      = $row['title'];
             $desc       = $row['description'];
             $end_date   = new DateTime($row['end_date']);
-            
-            // --- 图片逻辑 ---
-            $img_path = $row['image_path'] ?? null;
-            $img_html = '';
-            if (!empty($img_path) && file_exists("images/" . $img_path)) {
-                // 有图
-                $img_html = '<img src="images/' . $img_path . '" alt="Item" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
+
+            $image_path_row = $row['image_path'] ?? '';
+            if (!empty($image_path_row) && file_exists($image_path_row)) {
+                $img_html = '<img src="' . htmlspecialchars($image_path_row) . '" alt="Item image" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
             } else {
-                // 无图：占位符
                 $img_html = '<div class="img-placeholder" style="width: 120px; height: 120px; margin: 0;"></div>';
             }
         ?>
@@ -78,7 +72,6 @@ $result = db_query($sql, "i", [$user_id]);
                 </h5>
                 <p class="mb-1 text-muted small" style="line-height: 1.4;">
                     <?php
-                    // 描述截断
                     $desc_short = (strlen($desc) > 120) ? substr($desc, 0, 120) . '...' : $desc;
                     echo htmlspecialchars($desc_short);
                     ?>

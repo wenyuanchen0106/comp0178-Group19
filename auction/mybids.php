@@ -1,26 +1,21 @@
 <?php
-// Show all errors during development
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once 'utilities.php';
 
-// Close expired auctions before showing bids
 close_expired_auctions();
 activate_pending_auctions();
 
-// Include page header
 include_once 'header.php';
 
-// Check login
 if (!is_logged_in()) {
     echo '<div class="alert alert-danger text-center my-4">You must be logged in to view your bids.</div>';
     include_once 'footer.php';
     exit();
 }
 
-// Sellers cannot access mybids page
 $user_role = current_user_role();
 if ($user_role === 'seller') {
     echo '<div class="alert alert-warning text-center my-4">';
@@ -32,13 +27,8 @@ if ($user_role === 'seller') {
     exit();
 }
 
-// Current user id
 $user_id = current_user_id();
 
-/*
- * Step 1: find all distinct auctions where this user has placed at least one bid
- * ✅ 修正 1: 加上了 i.image_path
- */
 $sql = "
     SELECT DISTINCT
         a.auction_id,
@@ -76,45 +66,29 @@ $result = db_query($sql, 'i', [$user_id]);
                 $end_time     = new DateTime($row['end_date']);
                 $status       = $row['status'];
                 $winner_id    = $row['winner_id'] !== null ? (int)$row['winner_id'] : null;
-                
-                // ✅ 修正 2: 图片逻辑
-                $img_path = $row['image_path'] ?? null;
-                $img_html = '';
-                if (!empty($img_path) && file_exists("images/" . $img_path)) {
-                    // 有图
-                    $img_html = '<img src="images/' . $img_path . '" alt="Item" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
+
+                $image_path_row = $row['image_path'] ?? '';
+                if (!empty($image_path_row) && file_exists($image_path_row)) {
+                    $img_html = '<img src="' . htmlspecialchars($image_path_row) . '" alt="Item image" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
                 } else {
-                    // 无图 (显示斯塔克占位符)
                     $img_html = '<div class="img-placeholder" style="width: 120px; height: 120px; margin: 0;"></div>';
                 }
 
-                /*
-                 * Step 2: compute current_price and num_bids for this auction
-                 */
                 $sql_stats = "SELECT COUNT(*) AS num_bids, MAX(bid_amount) AS max_bid FROM bids WHERE auction_id = ?";
                 $res_stats = db_query($sql_stats, 'i', [$auction_id]);
                 $stats_row = $res_stats->fetch_assoc();
                 $num_bids  = (int)$stats_row['num_bids'];
                 $max_bid   = $stats_row['max_bid'];
 
-                /*
-                 * Step 3: compute my_max_bid in this auction
-                 */
                 $sql_my = "SELECT MAX(bid_amount) AS my_max_bid FROM bids WHERE auction_id = ? AND buyer_id = ?";
                 $res_my   = db_query($sql_my, 'ii', [$auction_id, $user_id]);
                 $my_row   = $res_my->fetch_assoc();
                 $my_max_bid = $my_row['my_max_bid'] !== null ? (float)$my_row['my_max_bid'] : null;
 
-                /*
-                 * Step 4: check payment status in payments table
-                 */
                 $sql_paid = "SELECT 1 FROM payments WHERE auction_id = ? AND user_id = ? AND status = 'completed' LIMIT 1";
                 $res_paid = db_query($sql_paid, 'ii', [$auction_id, $user_id]);
                 $paid     = ($res_paid && $res_paid->num_rows > 0);
 
-                /*
-                 * Step 5: derive current_price
-                 */
                 $sql_start = "SELECT start_price FROM auctions WHERE auction_id = ? LIMIT 1";
                 $res_start = db_query($sql_start, 'i', [$auction_id]);
                 $start_row = $res_start->fetch_assoc();
@@ -122,22 +96,21 @@ $result = db_query($sql, 'i', [$user_id]);
 
                 $current_price = ($max_bid === null) ? $start_price : (float)$max_bid;
 
-                // Determine status
                 $now   = new DateTime();
                 $ended = ($now >= $end_time || $status === 'finished' || $status === 'closed' || $status === 'paid' || $status === 'cancelled');
 
                 $result_text = '';
-                $status_color = ''; // 边框颜色
-                $text_class = '';   // 文字颜色
+                $status_color = '';
+                $text_class = '';
 
                 if (!$ended) {
                     if ($my_max_bid !== null && $my_max_bid >= $current_price) {
                         $result_text = 'Currently winning';
-                        $status_color = '#28a745'; // 绿色
+                        $status_color = '#28a745';
                         $text_class = 'text-success';
                     } else {
                         $result_text = 'Outbid';
-                        $status_color = '#dc3545'; // 红色
+                        $status_color = '#dc3545';
                         $text_class = 'text-danger';
                     }
                 } else {
@@ -147,7 +120,7 @@ $result = db_query($sql, 'i', [$user_id]);
                         $text_class = 'text-success';
                     } else {
                         $result_text = 'You lost';
-                        $status_color = '#6c757d'; // 灰色
+                        $status_color = '#6c757d';
                         $text_class = 'text-muted';
                     }
                 }
