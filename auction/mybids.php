@@ -1,12 +1,26 @@
 <?php
-require_once 'utilities.php';   // Session is already started inside utilities.php; do not start it again here
+// Enable error reporting during development
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Only accept POST requests
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('index.php');
+require_once 'utilities.php';
+
+// Close finished auctions and activate pending ones
+close_expired_auctions();
+activate_pending_auctions();
+
+// Common page header
+include_once 'header.php';
+
+// User must be logged in
+if (!is_logged_in()) {
+    echo '<div class="alert alert-danger text-center my-4">You must be logged in to view your bids.</div>';
+    include_once 'footer.php';
     exit();
 }
 
+// Sellers are not allowed to bid; this page is for buyers only
 $user_role = current_user_role();
 if ($user_role === 'seller') {
     echo '<div class="alert alert-warning text-center my-4">';
@@ -18,8 +32,10 @@ if ($user_role === 'seller') {
     exit();
 }
 
+// Current buyer id
 $user_id = current_user_id();
 
+// Find all distinct auctions where this user has placed at least one bid
 $sql = "
     SELECT DISTINCT
         a.auction_id,
@@ -43,11 +59,13 @@ $result = db_query($sql, 'i', [$user_id]);
     <h2 class="my-3 text-uppercase" style="font-family: 'Oswald', sans-serif; letter-spacing: 1px;">My bids</h2>
 
     <?php if (!$result || $result->num_rows === 0): ?>
+        <!-- No bids yet: show call-to-action -->
         <div class="text-center py-5">
             <p class="text-muted mb-4">You have not placed any bids yet.</p>
             <a href="browse.php" class="btn btn-primary btn-lg">Browse Auctions</a>
         </div>
     <?php else: ?>
+        <!-- List of auctions the user has bid on -->
         <ul class="list-group mb-5" style="border: none;">
             <?php while ($row = $result->fetch_assoc()):
                 $auction_id   = (int)$row['auction_id'];
@@ -58,38 +76,64 @@ $result = db_query($sql, 'i', [$user_id]);
                 $status       = $row['status'];
                 $winner_id    = $row['winner_id'] !== null ? (int)$row['winner_id'] : null;
 
+                // Try to resolve the correct image path:
+                // - if image_path is already a full path, use it
+                // - otherwise fall back to images/<image_path>
                 $image_path_row = $row['image_path'] ?? '';
-                if (!empty($image_path_row) && file_exists($image_path_row)) {
-                    $img_html = '<img src="' . htmlspecialchars($image_path_row) . '" alt="Item image" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
+                $img_src = '';
+                if (!empty($image_path_row)) {
+                    if (file_exists($image_path_row)) {
+                        $img_src = $image_path_row;
+                    } elseif (file_exists('images/' . $image_path_row)) {
+                        $img_src = 'images/' . $image_path_row;
+                    }
+                }
+
+                // Build image HTML or placeholder
+                if ($img_src !== '') {
+                    $img_html = '<img src="' . htmlspecialchars($img_src) . '" alt="Item image" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
                 } else {
                     $img_html = '<div class="img-placeholder" style="width: 120px; height: 120px; margin: 0;"></div>';
                 }
 
+                // Get overall bid statistics for this auction
                 $sql_stats = "SELECT COUNT(*) AS num_bids, MAX(bid_amount) AS max_bid FROM bids WHERE auction_id = ?";
                 $res_stats = db_query($sql_stats, 'i', [$auction_id]);
                 $stats_row = $res_stats->fetch_assoc();
                 $num_bids  = (int)$stats_row['num_bids'];
                 $max_bid   = $stats_row['max_bid'];
 
+                // Get this buyer's highest bid on this auction
                 $sql_my = "SELECT MAX(bid_amount) AS my_max_bid FROM bids WHERE auction_id = ? AND buyer_id = ?";
                 $res_my   = db_query($sql_my, 'ii', [$auction_id, $user_id]);
                 $my_row   = $res_my->fetch_assoc();
                 $my_max_bid = $my_row['my_max_bid'] !== null ? (float)$my_row['my_max_bid'] : null;
 
+                // Check whether this auction has already been paid by this buyer
                 $sql_paid = "SELECT 1 FROM payments WHERE auction_id = ? AND user_id = ? AND status = 'completed' LIMIT 1";
                 $res_paid = db_query($sql_paid, 'ii', [$auction_id, $user_id]);
                 $paid     = ($res_paid && $res_paid->num_rows > 0);
 
+                // Fetch starting price so we can compute current price if there are no bids
                 $sql_start = "SELECT start_price FROM auctions WHERE auction_id = ? LIMIT 1";
                 $res_start = db_query($sql_start, 'i', [$auction_id]);
                 $start_row = $res_start->fetch_assoc();
                 $start_price = (float)$start_row['start_price'];
 
+                // Current price = max bid if any, otherwise start price
                 $current_price = ($max_bid === null) ? $start_price : (float)$max_bid;
 
+                // Decide whether auction has ended
                 $now   = new DateTime();
-                $ended = ($now >= $end_time || $status === 'finished' || $status === 'closed' || $status === 'paid' || $status === 'cancelled');
+                $ended = (
+                    $now >= $end_time
+                    || $status === 'finished'
+                    || $status === 'closed'
+                    || $status === 'paid'
+                    || $status === 'cancelled'
+                );
 
+                // Build result label and colour based on outcome
                 $result_text = '';
                 $status_color = '';
                 $text_class = '';
@@ -120,10 +164,12 @@ $result = db_query($sql, 'i', [$user_id]);
             <li class="list-group-item d-flex align-items-center" 
                 style="background-color: rgba(28, 28, 30, 0.9); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; border-radius: 4px; border-left: 6px solid <?php echo $status_color; ?>;">
                 
+                <!-- Left: item image -->
                 <div class="mr-3">
                     <?php echo $img_html; ?>
                 </div>
 
+                <!-- Middle: title, description, my bid info -->
                 <div class="flex-grow-1">
                     <div class="d-flex justify-content-between">
                         <h5 class="mb-1">
@@ -150,6 +196,7 @@ $result = db_query($sql, 'i', [$user_id]);
                     </small>
                 </div>
 
+                <!-- Right: price, end time and payment button (if applicable) -->
                 <div class="text-right ml-4 text-nowrap" style="min-width: 140px;">
                     <div class="mb-1">Current: £<?php echo number_format($current_price, 2); ?></div>
                     <div class="small text-muted mb-2">
@@ -173,3 +220,5 @@ $result = db_query($sql, 'i', [$user_id]);
 </div>
 
 <?php include_once 'footer.php'; ?>
+
+
