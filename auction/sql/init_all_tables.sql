@@ -1,19 +1,20 @@
 -- =========================================
--- 只“增加”数据，不 DROP / 不 DELETE / 不覆盖现有数据
--- 适用于表结构
+-- Seed data only: INSERT / INSERT IGNORE
+-- No DROP / DELETE / overwrite of existing data
 -- =========================================
 
 USE auction_db;
 
--- 1) 角色：buyer / seller
--- 如果已经存在同名 role_name，会被 UNIQUE 拦住，INSERT IGNORE 不会报错
+-- 1) Roles: buyer / seller
+-- If a role_name already exists, UNIQUE + INSERT IGNORE will skip it without error
 INSERT IGNORE INTO roles (role_name) VALUES 
 ('buyer'), 
 ('seller');
 
 
--- 2) Demo 用户：一个买家 + 一个卖家
--- 密码都是 123123（bcrypt 哈希），不会动你现有 users，只是多两行
+-- 2) Demo users: one buyer + one seller
+-- Password for both is 123123 (bcrypt hash)
+-- This only adds two extra rows, does not touch your existing users
 INSERT IGNORE INTO users (name, email, password_hash, role_id)
 VALUES
   (
@@ -29,10 +30,8 @@ VALUES
     (SELECT role_id FROM roles WHERE role_name = 'seller' LIMIT 1)
   );
 
--- 3) 分类：基础几类
--- 如果你之前已经插过同名 category_name，UNIQUE + INSERT IGNORE 会跳过，不会覆盖
-
-    
+-- 3) Categories: basic examples
+-- If you already inserted the same category_name, UNIQUE + INSERT IGNORE will skip it
 
 INSERT IGNORE INTO categories (category_name) VALUES
   ('Books'),
@@ -44,8 +43,8 @@ INSERT IGNORE INTO categories (category_name) VALUES
   ('Fashion');
  
 
--- 4) Demo 商品（items）：都归 Demo Seller 所有
--- 这里只是插入，不会影响你之前 create_auction 插入的 item
+-- 4) Demo items: all owned by Demo Seller
+-- Only insert rows; does not affect existing items created via create_auction
 INSERT INTO items (title, description, category_id, seller_id)
 VALUES
   (
@@ -67,8 +66,9 @@ VALUES
     (SELECT user_id FROM users WHERE email = 'demo_seller1@example.com' LIMIT 1)
   );
 
--- 5) 为这些 Demo 商品创建拍卖（auctions）
--- ① Vintage Coffee Table：7 天后结束，active
+-- 5) Create auctions for these demo items
+
+-- (1) Vintage Coffee Table: ends in 7 days, active
 INSERT INTO auctions (
     item_id, seller_id, start_price, reserve_price,
     start_date, end_date, winner_id, status
@@ -76,8 +76,8 @@ INSERT INTO auctions (
 SELECT 
     i.item_id,
     i.seller_id,
-    20.00,       -- 起拍价
-    35.00,       -- 保留价
+    20.00,       -- starting price
+    35.00,       -- reserve price
     NOW(),
     DATE_ADD(NOW(), INTERVAL 7 DAY),
     NULL,
@@ -89,7 +89,7 @@ WHERE i.title = 'Vintage Coffee Table'
 ORDER BY i.item_id DESC
 LIMIT 1;
 
--- ② Football Boots：3 天后结束，active
+-- (2) Football Boots: ends in 3 days, active
 INSERT INTO auctions (
     item_id, seller_id, start_price, reserve_price,
     start_date, end_date, winner_id, status
@@ -110,7 +110,7 @@ WHERE i.title = 'Football Boots Size 42'
 ORDER BY i.item_id DESC
 LIMIT 1;
 
--- ③ LEGO City Set：昨天结束，finished，winner = Demo Buyer
+-- (3) LEGO City Set: auction ended yesterday, finished, winner = Demo Buyer
 INSERT INTO auctions (
     item_id, seller_id, start_price, reserve_price,
     start_date, end_date, winner_id, status
@@ -131,10 +131,10 @@ WHERE i.title = 'LEGO City Set'
 ORDER BY i.item_id DESC
 LIMIT 1;
 
--- 6) 为部分拍卖加一些历史出价（bids）
--- 注意列名是 bid_amount / buyer_id，对应你现在的表结构
+-- 6) Add some bid history for these auctions
+-- Note: column names are bid_amount / buyer_id, matching your schema
 
--- 给 Vintage Coffee Table 加两口价
+-- Vintage Coffee Table: two bids from Demo Buyer
 INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
 SELECT 
     a.auction_id,
@@ -163,7 +163,7 @@ WHERE i.title = 'Vintage Coffee Table'
 ORDER BY a.auction_id DESC
 LIMIT 1;
 
--- 给 Football Boots 加一口价
+-- Football Boots: one bid from Demo Buyer 1
 INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
 SELECT 
     a.auction_id,
@@ -178,7 +178,7 @@ WHERE i.title = 'Football Boots Size 42'
 ORDER BY a.auction_id DESC
 LIMIT 1;
 
--- 7) 额外 Demo 买家：用于演示“出价失败 / You lost”等情况
+-- 7) Extra demo buyer: used to demonstrate “You lost” etc.
 INSERT IGNORE INTO users (name, email, password_hash, role_id)
 VALUES (
     'Demo Buyer 2',
@@ -187,7 +187,7 @@ VALUES (
     (SELECT role_id FROM roles WHERE role_name = 'buyer' LIMIT 1)
 );
 
--- 8) 更多 Demo 商品（items），仍然归 Demo Seller 所有
+-- 8) More demo items, still owned by Demo Seller
 INSERT INTO items (title, description, category_id, seller_id)
 VALUES
   (
@@ -209,9 +209,9 @@ VALUES
     (SELECT user_id FROM users WHERE email = 'demo_seller1@example.com' LIMIT 1)
   );
 
--- 9) 为这些新商品创建拍卖（auctions）
+-- 9) Create auctions for these new items
 
--- ⑦ MacBook Pro：2 天后结束，active
+-- (4) MacBook Pro: ends in 2 days, active
 INSERT INTO auctions (
     item_id, seller_id, start_price, reserve_price,
     start_date, end_date, winner_id, status
@@ -219,8 +219,8 @@ INSERT INTO auctions (
 SELECT 
     i.item_id,
     i.seller_id,
-    500.00,       -- 起拍价
-    650.00,       -- 保留价
+    500.00,       -- starting price
+    650.00,       -- reserve price
     NOW(),
     DATE_ADD(NOW(), INTERVAL 2 DAY),
     NULL,
@@ -232,7 +232,7 @@ WHERE i.title = 'MacBook Pro 2019 13"'
 ORDER BY i.item_id DESC
 LIMIT 1;
 
--- ⑧ Denim Jacket：5 天后结束，active，无保留价
+-- (5) Denim Jacket: ends in 5 days, active, no reserve price
 INSERT INTO auctions (
     item_id, seller_id, start_price, reserve_price,
     start_date, end_date, winner_id, status
@@ -240,7 +240,7 @@ INSERT INTO auctions (
 SELECT 
     i.item_id,
     i.seller_id,
-    15.00,       -- 起拍价
+    15.00,       -- starting price
     NULL,
     NOW(),
     DATE_ADD(NOW(), INTERVAL 5 DAY),
@@ -253,7 +253,7 @@ WHERE i.title = 'Denim Jacket Size M'
 ORDER BY i.item_id DESC
 LIMIT 1;
 
--- ⑨ Children Story Book Set：已结束的拍卖，winner 是 Demo Buyer 2
+-- (6) Children Story Book Set: finished auction, winner is Demo Buyer 2
 INSERT INTO auctions (
     item_id, seller_id, start_price, reserve_price,
     start_date, end_date, winner_id, status
@@ -261,7 +261,7 @@ INSERT INTO auctions (
 SELECT 
     i.item_id,
     i.seller_id,
-    5.00,        -- 起拍价
+    5.00,        -- starting price
     NULL,
     DATE_SUB(NOW(), INTERVAL 4 DAY),
     DATE_SUB(NOW(), INTERVAL 2 DAY),
@@ -274,9 +274,9 @@ WHERE i.title = 'Children Story Book Set'
 ORDER BY i.item_id DESC
 LIMIT 1;
 
--- 10) 为这些新拍卖增加历史出价（bids）
+-- 10) Add bid history for these new auctions
 
--- MacBook Pro：Demo Buyer 1 出 520，再出 580（当前领先）
+-- MacBook Pro: Demo Buyer 1 bids 520 then 580 (currently leading)
 INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
 SELECT 
     a.auction_id,
@@ -305,7 +305,7 @@ WHERE i.title = 'MacBook Pro 2019 13"'
 ORDER BY a.auction_id DESC
 LIMIT 1;
 
--- Children Story Book Set：Buyer1 出 6.00，Buyer2 出 7.50（最后赢家是 Buyer2）
+-- Children Story Book Set: Buyer1 bids 6.00, Buyer2 bids 7.50 (final winner is Buyer2)
 INSERT INTO bids (auction_id, buyer_id, bid_amount, bid_time)
 SELECT 
     a.auction_id,

@@ -1,11 +1,17 @@
 <?php
+// mylistings.php
+// Seller dashboard page listing the seller's own active and finished auctions
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once 'utilities.php';
+
+// Close expired auctions and activate those that have reached their start time
 close_expired_auctions();
 activate_pending_auctions();
+
 include_once 'header.php';
 
 // 1. Check user role (must be logged in as seller)
@@ -24,7 +30,7 @@ if (!is_logged_in() || current_user_role() !== 'seller') {
 
 $seller_id = current_user_id();
 
-// 2. Fetch all auctions created by this seller, with image, basic stats and payment flag
+// 2. Fetch all auctions created by this seller, including basic stats and payment flag
 $sql = "
     SELECT
         i.item_id,
@@ -66,6 +72,7 @@ $result = db_query($sql, "i", [$seller_id]);
 $active = [];
 $finished = [];
 
+// Split seller auctions into active/pending and finished buckets
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         if ($row['status'] === 'active' || $row['status'] === 'pending') {
@@ -110,7 +117,7 @@ if ($result && $result->num_rows > 0) {
           $now         = new DateTime();
           $status      = $row['status'];
 
-          // 计算当前价格
+          // Compute current price based on highest bid or starting price
           $current_price = ($max_bid !== null) ? $max_bid : $start_price;
 
           $img_path = $row['image_path'] ?? null;
@@ -121,9 +128,8 @@ if ($result && $result->num_rows > 0) {
               $img_html = '<div class="img-placeholder" style="width: 120px; height: 120px; margin: 0;"></div>';
           }
 
-          // 计算剩余时间
+          // Compute time information (until start for pending, until end for active)
           if ($status === 'pending') {
-              // Pending 状态：显示距离开始的时间
               if ($now < $start_date) {
                   $interval = date_diff($now, $start_date);
                   $time_info = display_time_remaining($interval) . ' until start';
@@ -131,7 +137,6 @@ if ($result && $result->num_rows > 0) {
                   $time_info = 'Starting soon';
               }
           } else {
-              // Active 状态：显示距离结束的时间
               if ($now > $end_date) {
                   $time_info = 'Ending soon';
               } else {
@@ -166,13 +171,13 @@ if ($result && $result->num_rows > 0) {
           
           <div class="text-right">
               <?php if ($status === 'pending'): ?>
-                  <!-- Pending: 只显示起拍价 -->
+                  <!-- Pending auction: show starting price only -->
                   <div class="mb-2" style="font-family: 'Oswald', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--color-accent); letter-spacing: 0.5px;">
                       £<?php echo number_format($start_price, 2); ?>
                   </div>
                   <div class="text-muted small mb-2">Starting price</div>
               <?php else: ?>
-                  <!-- Active: 显示现价和起拍价 -->
+                  <!-- Active auction: show current price and starting price -->
                   <div class="mb-1" style="font-family: 'Oswald', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--color-accent); letter-spacing: 0.5px;">
                       £<?php echo number_format($current_price, 2); ?>
                   </div>
@@ -205,12 +210,14 @@ if ($result && $result->num_rows > 0) {
   <?php endif; ?>
 
   <script>
+  // Helper to end an active auction immediately via redirect
   function endAuction(itemId) {
     if (confirm('Are you sure you want to end this auction now?')) {
       window.location.href = 'end_auction.php?item_id=' + itemId;
     }
   }
 
+  // Helper to cancel a pending auction via redirect
   function cancelAuction(itemId) {
     if (confirm('Are you sure you want to cancel this pending auction?')) {
       window.location.href = 'cancel_auction.php?item_id=' + itemId;
@@ -241,6 +248,7 @@ if ($result && $result->num_rows > 0) {
               $img_html = '<div class="img-placeholder" style="width: 100px; height: 100px; margin: 0; opacity: 0.6;"></div>';
           }
 
+          // Build status badge based on winner and payment state
           $status_badge = '';
           if ($winner_id) {
               if ($is_paid) {
@@ -285,4 +293,3 @@ if ($result && $result->num_rows > 0) {
 </div>
 
 <?php include_once 'footer.php'; ?>
-

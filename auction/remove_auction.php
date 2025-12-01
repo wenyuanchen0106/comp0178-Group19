@@ -1,28 +1,28 @@
 <?php
 // remove_auction.php
-// 管理员下架拍品
+// Admin remove auction
 
 require_once 'utilities.php';
 require_login();
 
-// 检查是否管理员
+// Check if user is admin
 if ($_SESSION['role_id'] != 3) {
     echo "<p style='color:red'>Access denied: Admin only.</p>";
     exit;
 }
 
-// 获取参数
+// Get parameters
 $auction_id = isset($_GET['auction_id']) ? intval($_GET['auction_id']) : 0;
-$report_id = isset($_GET['report_id']) ? intval($_GET['report_id']) : 0;
+$report_id  = isset($_GET['report_id'])  ? intval($_GET['report_id'])  : 0;
 
 if ($auction_id <= 0) {
     echo "<p style='color:red'>Invalid auction ID.</p>";
     exit;
 }
 
-// 检查拍卖是否存在
+// Check if auction exists
 $check_sql = "SELECT auction_id, status FROM auctions WHERE auction_id = ?";
-$result = db_query($check_sql, "i", [$auction_id]);
+$result    = db_query($check_sql, "i", [$auction_id]);
 
 if ($result->num_rows === 0) {
     echo "<p style='color:red'>Auction not found.</p>";
@@ -31,24 +31,24 @@ if ($result->num_rows === 0) {
 
 $auction = $result->fetch_assoc();
 
-// 检查拍卖是否已经被下架
+// Check if auction is already removed
 if ($auction['status'] === 'removed') {
     header("Location: admin_reports.php?message=already_removed");
     exit;
 }
 
-// 更新拍卖状态为 'removed'
+// Update auction status to 'removed'
 $update_sql = "UPDATE auctions SET status = 'removed' WHERE auction_id = ?";
 db_query($update_sql, "i", [$auction_id]);
 
-// 如果有report_id，同时标记举报为已解决
+// If report_id is provided, mark the report as resolved
 if ($report_id > 0) {
     $resolve_sql = "UPDATE reports SET status = 'resolved' WHERE report_id = ?";
     db_query($resolve_sql, "i", [$report_id]);
 }
 
-// 可以选择发送通知给卖家
-// TODO: 添加通知功能
+// Optional: send notification to seller
+// TODO: add notification logic
 
 include_once 'header.php';
 ?>

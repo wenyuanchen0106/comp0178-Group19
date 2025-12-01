@@ -1,17 +1,17 @@
 <?php
 require_once 'utilities.php';
 
-// 如果有清理过期拍卖的逻辑
-if(function_exists('close_expired_auctions')) {
+// If cleanup logic for expired auctions exists, run it
+if (function_exists('close_expired_auctions')) {
     close_expired_auctions();
 }
-// 激活已到开始时间的pending拍卖
-if(function_exists('activate_pending_auctions')) {
+// Activate pending auctions that have reached their start time
+if (function_exists('activate_pending_auctions')) {
     activate_pending_auctions();
 }
 
-// 查询首页展示的 10 个热门/即将结束的拍卖
-// 只显示 active 且未过期的拍卖
+// Query 10 featured / soon-ending auctions for the homepage
+// Only show active auctions that have not yet expired
 $sql = "
   SELECT
     a.auction_id,
@@ -78,17 +78,17 @@ include_once 'header.php';
       echo '<li class="list-group-item">No active auctions at the moment.</li>';
     } else {
       while ($row = $result_index->fetch_assoc()) {
-        $item_id       = $row['item_id'];
-        $title         = $row['title'];
-        $description   = $row['description'];
-        $current_price = (float)$row['current_price'];
-        $num_bids      = (int)$row['num_bids'];
-        $end_date      = new DateTime($row['end_date']);
-        $image_path    = $row['image_path'] ?? null;
+        $item_id        = $row['item_id'];
+        $title          = $row['title'];
+        $description    = $row['description'];
+        $current_price  = (float)$row['current_price'];
+        $num_bids       = (int)$row['num_bids'];
+        $end_date       = new DateTime($row['end_date']);
+        $image_path     = $row['image_path'] ?? null;
         $current_winner = $row['current_winner'] ?? null;
 
-        // 调用 utilities.php 里的函数输出列表项
-        if(function_exists('print_listing_li')) {
+        // Use helper function in utilities.php to output listing item
+        if (function_exists('print_listing_li')) {
             print_listing_li(
               $item_id,
               $title,
@@ -100,8 +100,8 @@ include_once 'header.php';
               $current_winner
             );
         } else {
-            // 备用方案
-            echo '<li class="list-group-item"><a href="listing.php?item_id='.$item_id.'">'.$title.'</a></li>';
+            // Fallback: simple list item with link
+            echo '<li class="list-group-item"><a href="listing.php?item_id=' . $item_id . '">' . $title . '</a></li>';
         }
       }
       $result_index->free();

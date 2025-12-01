@@ -1,65 +1,66 @@
 -- ========================================
--- 数据库迁移脚本：添加管理员功能
+-- Database migration script: add admin features
 -- ========================================
--- 此脚本用于在现有数据库上添加管理员功能
--- 如果你已经运行过 schema.sql 和 seed.sql，请运行此脚本来添加管理员功能
+-- This script adds admin functionality on top of an existing database.
+-- If you have already run schema.sql and seed.sql, run this script
+-- to enable admin features.
 --
--- 使用方法：
--- 1. 登录 phpMyAdmin (http://localhost/phpmyadmin)
--- 2. 选择 auction_db 数据库
--- 3. 点击 SQL 标签
--- 4. 复制粘贴此脚本并运行
+-- How to use:
+-- 1. Log in to phpMyAdmin (http://localhost/phpmyadmin)
+-- 2. Select the auction_db database
+-- 3. Click the SQL tab
+-- 4. Paste this script and execute it
 -- ========================================
 
 USE auction_db;
 
 -- ========================================
--- 1. 添加 admin 角色（如果不存在）
+-- 1. Add admin role (if it does not exist)
 -- ========================================
 INSERT IGNORE INTO roles (role_id, role_name) VALUES (3, 'admin');
 
 -- ========================================
--- 2. 修改 auctions 表的 status 字段，添加 'removed' 状态
+-- 2. Update auctions.status ENUM to include 'removed'
 -- ========================================
--- 检查当前的 ENUM 值，如果不包含 'removed'，则修改
+-- If your current ENUM does not contain 'removed', this will extend it
 ALTER TABLE auctions
 MODIFY COLUMN status ENUM('pending','active','finished','cancelled','removed')
 NOT NULL DEFAULT 'pending';
 
 -- ========================================
--- 完成数据库结构更新！
+-- Database structure update completed!
 -- ========================================
 --
--- 下一步：创建初始管理员账号
+-- Next step: create the initial admin account
 -- ========================================
--- 由于密码需要使用PHP的password_hash()函数加密，
--- 无法在SQL中直接创建管理员账号。
+-- Because the password must be hashed using PHP's password_hash(),
+-- we do not create the admin user directly in SQL here.
 --
--- 请按以下步骤创建初始管理员：
---
--- 方法1（推荐）：访问 create_initial_admin.php
--- ----------------------------------------
--- 1. 在浏览器中访问：
+-- Option 1 (recommended): use create_initial_admin.php
+-- ----------------------------------------------------
+-- 1. In your browser, visit:
 --    http://localhost/auction/create_initial_admin.php
 --
--- 2. 页面会自动创建管理员账号：
---    邮箱: admin@auction.com
---    密码: password123
+-- 2. That page will automatically create an admin account:
+--    Email: admin@auction.com
+--    Password: password123
 --
--- 3. 创建成功后，立即删除 create_initial_admin.php 文件
---
---
--- 方法2：使用管理员管理页面
--- ----------------------------------------
--- 1. 先注册一个普通账号
--- 2. 在phpMyAdmin中手动修改该账号的role_id为3
--- 3. 登录后访问 manage_admins.php 创建其他管理员
+-- 3. After successful creation, immediately delete create_initial_admin.php
 --
 --
--- 管理员功能：
--- ----------------------------------------
--- 1. 查看所有举报：访问 admin_reports.php
--- 2. 下架拍品：在举报页面点击 "Remove Auction" 按钮
--- 3. 创建新管理员：访问 manage_admins.php
--- 4. 管理员菜单会自动显示在导航栏
+-- Option 2: use the admin management page
+-- ----------------------------------------------------
+-- 1. First register a normal account via the site
+-- 2. In phpMyAdmin, manually change that user’s role_id to 3
+-- 3. Log in with this account and open manage_admins.php
+--    to create additional admins
+--
+--
+-- Admin capabilities (after this migration):
+-- ----------------------------------------------------
+-- 1. View all reports: open admin_reports.php
+-- 2. Remove auctions: click "Remove Auction" on the report page
+-- 3. Create new admins: open manage_admins.php
+-- 4. The admin menu will automatically appear in the navigation bar
 -- ========================================
+

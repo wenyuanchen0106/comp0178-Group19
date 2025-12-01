@@ -30,22 +30,22 @@ require_once 'utilities.php';
     <li class="nav-item">
 
 <?php
-// 检查是否登录
+// Check if user is logged in
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
 
-  // ✅ 核心修改：优先显示名字 (username)，如果没有名字则显示角色 (account_type)
+  // Prefer to display username if set, otherwise fall back to account_type
   $display_name = $_SESSION['username'] ?? $_SESSION['account_type'] ?? 'Agent';
   
   echo '<div class="d-flex align-items-center">';
   
-  // 显示 "Hello, NAME" (名字用金色高亮)
+  // Display "Hello, NAME" (name highlighted)
   echo '<span class="navbar-text mr-3" style="color: var(--color-text-light);">'
         . 'Hello, <strong style="color: var(--color-accent); text-transform: uppercase; letter-spacing: 1px;">' 
         . htmlspecialchars($display_name) 
         . '</strong>'
         . '</span>';
         
-  // Logout 按钮
+  // Logout button
   echo '<a class="nav-link" href="logout.php" style="color: #aaa; transition: 0.3s;">'
         . '<i class="fa fa-sign-out"></i> Logout'
         . '</a>';
@@ -53,7 +53,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
   echo '</div>';
 
 } else {
-  // 未登录显示 Login 按钮
+  // If not logged in, show Login button
   echo '<button type="button" class="btn nav-link" data-toggle="modal" data-target="#loginModal">'
         . '<i class="fa fa-sign-in"></i> Login'
         . '</button>';
@@ -67,7 +67,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
   <ul class="navbar-nav align-middle">
 
 <?php
-// Browse 链接 - 只对buyer和seller显示，管理员不显示
+// Browse link: visible to buyer and seller, hidden for admin
 if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] != 3) {
   echo('
     <li class="nav-item mx-1">
@@ -76,7 +76,7 @@ if (!isset($_SESSION['role_id']) || $_SESSION['role_id'] != 3) {
   ');
 }
 
-// Buyer 专属链接
+// Buyer-only links
 if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
 
     echo('
@@ -96,7 +96,7 @@ if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
             <a class="nav-link" href="notifications.php">
                 <i class="fa fa-bell"></i> Notifications');
 
-    // ⭐ 插入红点提示（未读数量）
+    // Insert red badge for unread notifications
     if (!empty($_SESSION['unread_notifications'])) {
         echo '
                 <span class="badge badge-danger position-absolute"
@@ -105,7 +105,7 @@ if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
                 </span>';
     }
 
-    // 关闭标签
+    // Close link tag
     echo '
             </a>
         </li>
@@ -125,7 +125,7 @@ if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
     </li>');
 }
 
-// Admin links
+// Admin links using role_id
 if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3) {
   echo('
     <li class="nav-item mx-1">
@@ -137,7 +137,7 @@ if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3) {
 }
 ?>
 <?php
-// Admin links
+// Additional admin panel link using role_name
 if (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'admin') {
     echo('
         <li class="nav-item mx-1">
@@ -179,3 +179,4 @@ if (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'admin') {
     </div>
   </div>
 </div>
+

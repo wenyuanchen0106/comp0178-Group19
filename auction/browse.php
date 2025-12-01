@@ -1,7 +1,9 @@
 <?php
+// Browse page to search and list active auctions with filters and pagination
+
 require_once 'utilities.php';
 
-// 管理员不允许访问browse页面
+// Redirect admin users away from browse page
 if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3) {
     header('Location: admin_reports.php');
     exit();
@@ -297,7 +299,7 @@ if ($num_results == 0) {
           <h5 class="mb-1">
             <a href="listing.php?item_id=<?php echo $item_id; ?>"
                class="text-light"
-               style="font-family: \'Oswald\', sans-serif; letter-spacing: 0.5px;">
+               style="font-family: 'Oswald', sans-serif; letter-spacing: 0.5px;">
               <?php echo htmlspecialchars($title); ?>
             </a>
           </h5>
@@ -391,3 +393,4 @@ if ($num_results == 0) {
 </div>
 
 <?php include_once("footer.php"); ?>
+

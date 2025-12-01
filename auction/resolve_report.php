@@ -2,7 +2,7 @@
 require_once 'utilities.php';
 require_login();
 
-// 管理员检查（role_id=3 是管理员）
+// Admin check (role_id = 3 means admin)
 if ($_SESSION['role_id'] != 3) {
     die("<p class='text-danger'>Access denied: Admins only.</p>");
 }
@@ -36,3 +36,4 @@ include_once 'header.php';
 </div>
 
 <?php include_once 'footer.php'; ?>
+

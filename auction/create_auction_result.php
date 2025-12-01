@@ -1,4 +1,6 @@
 <?php
+// Process auction creation form and insert a new auction into the system
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -16,14 +18,14 @@ include_once("header.php");
 /* TODO #1: Connect to MySQL database (perhaps by requiring a file that
             already does this). */
 
-// ------------ 1. 权限检查：必须是已登录的 seller -------------
+// ------------ 1. Permission check: must be logged in as seller -------------
 if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') {
     echo '<div class="alert alert-danger text-center">
             You must be logged in as a seller to create an auction.
           </div>';
 } else {
 
-    // ------------ 2. 读取并清洗表单数据 -----------------
+    // ------------ 2. Read and sanitise form data -----------------
     $title          = trim($_POST['title']         ?? '');
     $details        = trim($_POST['details']       ?? '');
     $category_raw   = $_POST['category']           ?? '';
@@ -34,7 +36,7 @@ if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') 
 
     $errors = [];
 
-    // 基本非空检查
+    // Basic required field checks
     if ($title === '') {
         $errors[] = 'Title is required.';
     }
@@ -45,7 +47,7 @@ if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') 
         $errors[] = 'Category is required.';
     }
 
-    // 价格检查
+    // Price validation
     if ($start_price === '' || !is_numeric($start_price) || $start_price < 0) {
         $errors[] = 'Starting price must be a non-negative number.';
     }
@@ -54,37 +56,37 @@ if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') 
         $errors[] = 'Reserve price must be a non-negative number (or left empty).';
     }
 
-    // 验证保留价必须大于或等于起始价
+    // Ensure reserve price is greater than or equal to starting price
     if ($reserve_price !== '' && is_numeric($reserve_price) && is_numeric($start_price)) {
         if ((float)$reserve_price < (float)$start_price) {
             $errors[] = 'Reserve price must be greater than or equal to starting price.';
         }
     }
 
-    // 开始时间检查：datetime-local 传过来类似 2025-11-20T23:59
+    // Start time check: datetime-local format like 2025-11-20T23:59
     $now = date('Y-m-d H:i:s');
     if ($start_date_raw === '') {
-        // 如果没有指定开始时间，默认为当前时间
+        // If no start time is provided, default to current time
         $start_date = $now;
     } else {
-        $start_date = str_replace('T', ' ', $start_date_raw) . ':00';   // 转成 MySQL DATETIME
+        $start_date = str_replace('T', ' ', $start_date_raw) . ':00';   // Convert to MySQL DATETIME
     }
 
-    // 结束时间检查：datetime-local 传过来类似 2025-11-20T23:59
+    // End time check: datetime-local format like 2025-11-20T23:59
     if ($end_date_raw === '') {
         $errors[] = 'End date/time is required.';
     } else {
-        $end_date = str_replace('T', ' ', $end_date_raw) . ':00';   // 转成 MySQL DATETIME
+        $end_date = str_replace('T', ' ', $end_date_raw) . ':00';   // Convert to MySQL DATETIME
         if ($end_date <= $now) {
             $errors[] = 'End time must be in the future.';
         }
-        // 验证开始时间必须早于结束时间
+        // Ensure start time is before end time
         if ($start_date >= $end_date) {
             $errors[] = 'Start time must be before end time.';
         }
     }
 
-    // category_id 转成整数（下拉框后面让你们把 value 改成实际 category_id）
+    // Cast category_id to integer (dropdown value should be actual category_id)
     $category_id = (int)$category_raw;
     $seller_id   = current_user_id();
 
@@ -94,7 +96,7 @@ if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') 
             make sure it can be inserted into the database. If there is an
             issue, give some semi-helpful feedback to user. */
 
-    // ------------ 3. 如果有错误，显示错误并不给插入 ----------
+    // ------------ 3. If there are validation errors, show them and do not insert ----------
     if (!empty($errors)) {
         echo '<div class="alert alert-danger"><ul>';
         foreach ($errors as $e) {
@@ -129,7 +131,7 @@ if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') 
             }
         }
 
-        // ------------ 4. 写入数据库：items + auctions -----------
+        // ------------ 4. Insert into database: items + auctions -----------
         db_execute(
             "INSERT INTO items (title, description, image_path, category_id, seller_id)
              VALUES (?, ?, ?, ?, ?)",
@@ -177,3 +179,4 @@ if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') 
 </div>
 
 <?php include_once("footer.php")?>
+

@@ -5,7 +5,7 @@
 <h2 class="my-3">Seller Statistics</h2>
 
 <?php
-  // 检查用户身份（必须已登录且为 seller）
+  // Check user identity (must be logged in as seller)
   if (!is_logged_in() || current_user_role() !== 'seller') {
       echo '<div class="alert alert-danger text-center my-4">
               You must be logged in as a seller to view statistics.
@@ -20,10 +20,10 @@
   $seller_id = current_user_id();
 
   // ===============================
-  // 统计查询 - 简化版本，直接使用 auctions.seller_id
+  // Statistics queries – simplified version using auctions.seller_id
   // ===============================
 
-  // 1. 总拍卖数
+  // 1. Total number of auctions
   $sql_total = "SELECT COUNT(*) as total_auctions FROM auctions WHERE seller_id = ?";
   $result_total = db_query($sql_total, "i", [$seller_id]);
   $total_auctions = 0;
@@ -31,7 +31,7 @@
       $total_auctions = (int)$row['total_auctions'];
   }
 
-  // 2. 总成交数量（status='finished' AND winner_id IS NOT NULL）
+  // 2. Total sold auctions (status='finished' AND winner_id IS NOT NULL)
   $sql_sold = "SELECT COUNT(*) as sold_count FROM auctions WHERE seller_id = ? AND status = 'finished' AND winner_id IS NOT NULL";
   $result_sold = db_query($sql_sold, "i", [$seller_id]);
   $sold_count = 0;
@@ -39,7 +39,7 @@
       $sold_count = (int)$row['sold_count'];
   }
 
-  // 3. 总收入（从 payments 表中计算已完成的支付）
+  // 3. Total revenue (sum of completed payments from payments table)
   $sql_revenue = "
     SELECT SUM(p.amount) as total_revenue
     FROM payments p
@@ -52,7 +52,7 @@
       $total_revenue = $row['total_revenue'] ? (float)$row['total_revenue'] : 0;
   }
 
-  // 4. 进行中拍卖数（status='active'）
+  // 4. Number of active auctions (status='active')
   $sql_active = "SELECT COUNT(*) as active_count FROM auctions WHERE seller_id = ? AND status = 'active'";
   $result_active = db_query($sql_active, "i", [$seller_id]);
   $active_count = 0;
@@ -60,7 +60,7 @@
       $active_count = (int)$row['active_count'];
   }
 
-  // 5. 待开始拍卖数（status='pending'）
+  // 5. Number of pending auctions (status='pending')
   $sql_pending = "SELECT COUNT(*) as pending_count FROM auctions WHERE seller_id = ? AND status = 'pending'";
   $result_pending = db_query($sql_pending, "i", [$seller_id]);
   $pending_count = 0;
@@ -68,7 +68,7 @@
       $pending_count = (int)$row['pending_count'];
   }
 
-  // 6. 已取消数（status='cancelled'）
+  // 6. Number of cancelled auctions (status='cancelled')
   $sql_cancelled = "SELECT COUNT(*) as cancelled_count FROM auctions WHERE seller_id = ? AND status = 'cancelled'";
   $result_cancelled = db_query($sql_cancelled, "i", [$seller_id]);
   $cancelled_count = 0;
@@ -76,7 +76,7 @@
       $cancelled_count = (int)$row['cancelled_count'];
   }
 
-  // 7. 未售出数（status='finished' AND winner_id IS NULL）
+  // 7. Number of unsold auctions (status='finished' AND winner_id IS NULL)
   $sql_unsold = "SELECT COUNT(*) as unsold_count FROM auctions WHERE seller_id = ? AND status = 'finished' AND winner_id IS NULL";
   $result_unsold = db_query($sql_unsold, "i", [$seller_id]);
   $unsold_count = 0;
@@ -84,7 +84,7 @@
       $unsold_count = (int)$row['unsold_count'];
   }
 
-  // 8. 平均成交价（取每个拍卖的最高出价）
+  // 8. Average sold price (use max bid per auction)
   $sql_avg_price = "
     SELECT AVG(max_bid) as avg_price
     FROM (
@@ -101,7 +101,7 @@
       $avg_price = $row['avg_price'] ? (float)$row['avg_price'] : 0;
   }
 
-  // 9. 最高成交价
+  // 9. Highest sold price
   $sql_max_price = "
     SELECT MAX(b.bid_amount) as max_price
     FROM bids b
@@ -114,13 +114,13 @@
       $max_price = $row['max_price'] ? (float)$row['max_price'] : 0;
   }
 
-  // 计算成功率
+  // Compute success rate
   $success_rate = $total_auctions > 0 ? ($sold_count / $total_auctions) * 100 : 0;
 ?>
 
-<!-- 统计卡片 -->
+<!-- Summary statistic cards -->
 <div class="row mt-4">
-  <!-- 总拍卖数 -->
+  <!-- Total auctions -->
   <div class="col-md-3 mb-3">
     <div class="card text-center">
       <div class="card-body">
@@ -130,7 +130,7 @@
     </div>
   </div>
 
-  <!-- 总成交数 -->
+  <!-- Total sold -->
   <div class="col-md-3 mb-3">
     <div class="card text-center bg-success text-white">
       <div class="card-body">
@@ -140,7 +140,7 @@
     </div>
   </div>
 
-  <!-- 总收入 -->
+  <!-- Total revenue -->
   <div class="col-md-3 mb-3">
     <div class="card text-center bg-primary text-white">
       <div class="card-body">
@@ -150,7 +150,7 @@
     </div>
   </div>
 
-  <!-- 成功率 -->
+  <!-- Success rate -->
   <div class="col-md-3 mb-3">
     <div class="card text-center bg-info text-white">
       <div class="card-body">
@@ -161,9 +161,9 @@
   </div>
 </div>
 
-<!-- 拍卖状态统计 -->
+<!-- Auction status statistics -->
 <div class="row mt-3">
-  <!-- 进行中 -->
+  <!-- Active -->
   <div class="col-md-3 mb-3">
     <div class="card text-center border-primary">
       <div class="card-body">
@@ -173,7 +173,7 @@
     </div>
   </div>
 
-  <!-- 待开始 -->
+  <!-- Pending -->
   <div class="col-md-3 mb-3">
     <div class="card text-center border-warning">
       <div class="card-body">
@@ -183,7 +183,7 @@
     </div>
   </div>
 
-  <!-- 未售出 -->
+  <!-- Unsold -->
   <div class="col-md-3 mb-3">
     <div class="card text-center border-secondary">
       <div class="card-body">
@@ -193,7 +193,7 @@
     </div>
   </div>
 
-  <!-- 已取消 -->
+  <!-- Cancelled -->
   <div class="col-md-3 mb-3">
     <div class="card text-center border-danger">
       <div class="card-body">
@@ -204,9 +204,9 @@
   </div>
 </div>
 
-<!-- 价格统计 -->
+<!-- Price statistics -->
 <div class="row mt-3 mb-5">
-  <!-- 平均成交价 -->
+  <!-- Average sold price -->
   <div class="col-md-6 mb-3">
     <div class="card">
       <div class="card-body">
@@ -217,7 +217,7 @@
     </div>
   </div>
 
-  <!-- 最高成交价 -->
+  <!-- Highest sold price -->
   <div class="col-md-6 mb-3">
     <div class="card">
       <div class="card-body">
@@ -229,7 +229,7 @@
   </div>
 </div>
 
-<!-- 操作按钮 -->
+<!-- Action buttons -->
 <div class="text-center mb-5">
   <a href="mylistings.php" class="btn btn-secondary">Back to My Listings</a>
   <a href="create_auction.php" class="btn btn-primary">Create New Auction</a>
@@ -238,3 +238,4 @@
 </div>
 
 <?php include_once("footer.php")?>
+

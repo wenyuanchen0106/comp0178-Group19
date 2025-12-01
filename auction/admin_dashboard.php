@@ -2,16 +2,14 @@
 require_once 'utilities.php';
 require_login();
 
-// 只有 admin 才能访问
+// Only admin users can access this page
 if ($_SESSION['role_name'] !== 'admin') {
     die("Access denied.");
 }
 
-/* ---------------------------
-   管理操作（删除、关闭、处理举报）
----------------------------- */
+// Admin operations: delete auctions, close auctions, handle reports
 
-// 删除 Auction
+// Delete an auction
 if (isset($_GET['delete_auction'])) {
     $auction_id = (int)$_GET['delete_auction'];
     db_execute("DELETE FROM auctions WHERE auction_id = ?", "i", [$auction_id]);
@@ -20,7 +18,7 @@ if (isset($_GET['delete_auction'])) {
     exit();
 }
 
-// 关闭 Auction（设为 finished）
+// Close an auction and mark it as finished
 if (isset($_GET['close_auction'])) {
     $auction_id = (int)$_GET['close_auction'];
     db_execute("UPDATE auctions SET status='finished', end_date=NOW() WHERE auction_id = ?", "i", [$auction_id]);
@@ -29,7 +27,7 @@ if (isset($_GET['close_auction'])) {
     exit();
 }
 
-// 驳回举报
+// Dismiss a report without further action
 if (isset($_GET['dismiss_report'])) {
     $report_id = (int)$_GET['dismiss_report'];
     db_execute("UPDATE reports SET status='dismissed' WHERE report_id=?", "i", [$report_id]);
@@ -38,7 +36,7 @@ if (isset($_GET['dismiss_report'])) {
     exit();
 }
 
-// 标记举报为已处理
+// Mark a report as resolved
 if (isset($_GET['resolve_report'])) {
     $report_id = (int)$_GET['resolve_report'];
     db_execute("UPDATE reports SET status='resolved' WHERE report_id=?", "i", [$report_id]);
@@ -47,9 +45,7 @@ if (isset($_GET['resolve_report'])) {
     exit();
 }
 
-/* ---------------------------
-   获取所有 Auctions
----------------------------- */
+// Fetch all auctions for the admin table
 $auctions = db_fetch_all("
     SELECT a.auction_id, a.status, i.title
     FROM auctions a
@@ -57,9 +53,7 @@ $auctions = db_fetch_all("
     ORDER BY a.auction_id DESC
 ");
 
-/* ---------------------------
-   获取所有 Reports（使用 description 字段）
----------------------------- */
+// Fetch all reports for the admin table
 $reports = db_fetch_all("
     SELECT report_id, user_id, auction_id, item_id, description, status, created_at
     FROM reports
@@ -73,7 +67,7 @@ include 'header.php';
     <h2>Admin Control Center</h2>
     <hr>
 
-    <!-- REPORTS -->
+    <!-- Reports table -->
     <h3>📌 Manage Reports</h3>
 
     <table class="table table-dark table-striped">
@@ -110,10 +104,9 @@ include 'header.php';
         </tbody>
     </table>
 
-
     <hr>
 
-    <!-- AUCTIONS -->
+    <!-- Auctions table -->
     <h3>📌 Manage Auctions</h3>
 
     <table class="table table-dark table-striped">

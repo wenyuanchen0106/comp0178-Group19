@@ -1,15 +1,21 @@
 <?php
+// mywatchlist.php
+// Watchlist page showing all auctions the current user is watching
+
 require_once 'utilities.php';
 include_once 'header.php';
 
+// Require login before showing watchlist
 if (!is_logged_in()) {
     echo '<div class="alert alert-danger text-center my-4">Please log in to view your watchlist.</div>';
     include_once 'footer.php';
     exit();
 }
 
+// Get current user id
 $user_id = current_user_id();
 
+// Fetch watchlist entries with related auction and item details
 $sql = "
     SELECT 
         w.auction_id,
@@ -33,6 +39,7 @@ $result = db_query($sql, "i", [$user_id]);
 
 <?php if (!$result || $result->num_rows === 0): ?>
 
+    <!-- Empty state when user has no watchlisted items -->
     <div class="text-center py-5">
         <p class="text-muted mb-4">You have no items in your watchlist.</p>
         <a href="browse.php" class="btn btn-primary btn-lg">Browse Auctions</a>
@@ -49,6 +56,7 @@ $result = db_query($sql, "i", [$user_id]);
             $desc       = $row['description'];
             $end_date   = new DateTime($row['end_date']);
 
+            // Build image HTML or placeholder if no image file
             $image_path_row = $row['image_path'] ?? '';
             if (!empty($image_path_row) && file_exists($image_path_row)) {
                 $img_html = '<img src="' . htmlspecialchars($image_path_row) . '" alt="Item image" style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #333;">';
@@ -88,6 +96,7 @@ $result = db_query($sql, "i", [$user_id]);
                    View Item
                 </a>
 
+                <!-- Form to remove this item from the user's watchlist -->
                 <form method="POST" action="watchlist_funcs.php" style="display:inline;">
                     <input type="hidden" name="functionname" value="remove_from_watchlist">
                     <input type="hidden" name="arguments" value="<?= $item_id ?>">

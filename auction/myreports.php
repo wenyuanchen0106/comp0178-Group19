@@ -1,10 +1,13 @@
 <?php
+// myreports.php
+// Buyer view to list all reports submitted by the current user
+
 require_once 'utilities.php';
 require_login();
 
 $user_id = $_SESSION['user_id'];
 
-// 查询当前用户的 report
+// Fetch all reports submitted by this user, including related item title
 $sql = "
     SELECT r.report_id, r.auction_id, r.item_id,
            r.description, r.status, r.created_at,

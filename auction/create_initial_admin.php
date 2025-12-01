@@ -1,11 +1,11 @@
 <?php
 // create_initial_admin.php
-// 创建初始管理员账号
-// 运行此文件一次后应该删除，防止安全风险
+// One-off script to create the initial admin account
+// Run this file once and then delete it to avoid security risks
 
 require_once 'utilities.php';
 
-// 管理员信息
+// Admin user details
 $admin_email = 'admin@auction.com';
 $admin_password = 'password123';
 $admin_name = 'Admin User';
@@ -14,12 +14,12 @@ echo "<!DOCTYPE html><html><head><title>Create Initial Admin</title>";
 echo "<link rel='stylesheet' href='css/bootstrap.min.css'></head><body>";
 echo "<div class='container mt-5'>";
 
-// 检查admin角色是否存在
+// Check if admin role already exists
 $check_role_sql = "SELECT role_id FROM roles WHERE role_name = 'admin'";
 $role_result = db_query($check_role_sql);
 
 if ($role_result->num_rows === 0) {
-    // 创建admin角色
+    // Create admin role
     echo "<div class='alert alert-info'>Creating admin role...</div>";
     $create_role_sql = "INSERT INTO roles (role_id, role_name) VALUES (3, 'admin')";
     db_query($create_role_sql);
@@ -31,18 +31,18 @@ if ($role_result->num_rows === 0) {
     echo "<div class='alert alert-info'>✓ Admin role already exists (role_id = $admin_role_id)</div>";
 }
 
-// 检查管理员账号是否已存在
+// Check if admin user already exists
 $check_admin_sql = "SELECT user_id FROM users WHERE email = ?";
 $admin_result = db_query($check_admin_sql, "s", [$admin_email]);
 
 if ($admin_result->num_rows > 0) {
     echo "<div class='alert alert-warning'>";
-    echo "<h4>管理员账号已存在</h4>";
-    echo "<p>邮箱: <strong>$admin_email</strong></p>";
-    echo "<p>如果忘记密码，请手动在数据库中删除此账号后重新运行此脚本。</p>";
+    echo "<h4>Admin account already exists</h4>";
+    echo "<p>Email: <strong>$admin_email</strong></p>";
+    echo "<p>If you have forgotten the password, please delete this account manually in the database and then run this script again.</p>";
     echo "</div>";
 } else {
-    // 创建管理员账号
+    // Create admin user account
     echo "<div class='alert alert-info'>Creating admin account...</div>";
 
     $password_hash = password_hash($admin_password, PASSWORD_DEFAULT);
@@ -50,18 +50,21 @@ if ($admin_result->num_rows > 0) {
     db_query($create_admin_sql, "sssi", [$admin_name, $admin_email, $password_hash, $admin_role_id]);
 
     echo "<div class='alert alert-success'>";
-    echo "<h4>✓ 管理员账号创建成功！</h4>";
-    echo "<p><strong>邮箱:</strong> $admin_email</p>";
-    echo "<p><strong>密码:</strong> $admin_password</p>";
+    echo "<h4>✓ Admin account created successfully!</h4>";
+    echo "<p><strong>Email:</strong> $admin_email</p>";
+    echo "<p><strong>Password:</strong> $admin_password</p>";
     echo "<hr>";
-    echo "<p class='mb-0'><a href='index.php' class='btn btn-primary'>前往登录</a></p>";
+    echo "<p class='mb-0'><a href='index.php' class='btn btn-primary'>Go to login</a></p>";
     echo "</div>";
 }
 
+// Security reminder to remove this script after use
 echo "<div class='alert alert-danger mt-4'>";
-echo "<h5>⚠️ 重要安全提醒</h5>";
-echo "<p class='mb-0'>创建管理员账号后，请立即删除此文件：<br><code>create_initial_admin.php</code></p>";
+echo "<h5>⚠️ Important security notice</h5>";
+echo "<p class='mb-0'>After creating the admin account, please delete this file immediately:<br><code>create_initial_admin.php</code></p>";
 echo "</div>";
 
 echo "</div></body></html>";
 ?>
+
+

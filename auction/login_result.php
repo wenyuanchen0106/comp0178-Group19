@@ -1,20 +1,20 @@
 <?php
-require_once 'utilities.php';   // 已经在里面 session_start() 了，这里不要再 session_start()
+require_once 'utilities.php';   // Session is started inside utilities.php; do not start it again here
 
-// 只接受 POST 请求
+// Only accept POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('index.php');
     exit();
 }
 
-// 1. 取表单数据（注意 name 要和 header.php 里的 login form 对应）
-// 一般 starter code 登录表单是 name="email" 和 name="password"
+// 1. Read form data (names must match the login form in header.php)
+// The starter code login form uses name="email" and name="password"
 $email    = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 
 $errors = [];
 
-// 2. 基本校验
+// 2. Basic validation
 if ($email === '') {
     $errors[] = 'Email is required.';
 } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -25,7 +25,7 @@ if ($password === '') {
     $errors[] = 'Password is required.';
 }
 
-// 如果已经有错误，直接反馈
+// If there are validation errors, show them and stop
 if (!empty($errors)) {
     include_once 'header.php';
     echo '<div class="container my-3">';
@@ -41,7 +41,7 @@ if (!empty($errors)) {
     exit();
 }
 
-// 3. 从数据库中查找用户（连 roles 一起查出）
+// 3. Look up the user in the database (join roles to get role info)
 $sql = "
     SELECT u.user_id, u.password_hash, u.role_id, r.role_name, u.name
     FROM users u
@@ -52,7 +52,7 @@ $sql = "
 $result = db_query($sql, "s", [$email]);
 
 if (!$result || $result->num_rows === 0) {
-    // 邮箱不存在
+    // Email not found
     include_once 'header.php';
     echo '<div class="container my-3">';
     echo '<h2>Login failed</h2>';
@@ -65,7 +65,7 @@ if (!$result || $result->num_rows === 0) {
 
 $row = $result->fetch_assoc();
 
-// 4. 验证密码（和注册时的 password_hash 对应）
+// 4. Verify password against stored password_hash
 if (!password_verify($password, $row['password_hash'])) {
     include_once 'header.php';
     echo '<div class="container my-3">';
@@ -77,16 +77,17 @@ if (!password_verify($password, $row['password_hash'])) {
     exit();
 }
 
-// 5. 登录成功：设置统一的 session 变量（和 register 那边保持一致）
-$_SESSION['user_id'] = $row['user_id'];
-$_SESSION['logged_in'] = true;
+// 5. Login successful: set session variables (consistent with registration)
+$_SESSION['user_id']      = $row['user_id'];
+$_SESSION['logged_in']    = true;
 $_SESSION['account_type'] = $row['role_name'];  // buyer / seller / admin
-$_SESSION['role_name'] = $row['role_name'];     // 一些 admin page 会用到
-$_SESSION['role_id'] = $row['role_id'];         // 管理员权限检查需要
-$_SESSION['username'] = $row['name'];           // 用户名
-$_SESSION['email'] = $email;
+$_SESSION['role_name']    = $row['role_name'];  // used by admin pages
+$_SESSION['role_id']      = $row['role_id'];    // used for permission checks
+$_SESSION['username']     = $row['name'];       // display name
+$_SESSION['email']        = $email;
 
-// 6. 重定向到主页面（可以改成 index.php 或 mylistings.php）
+// 6. Redirect to main page (can be changed to index.php or mylistings.php)
 redirect('browse.php');
 exit();
 ?>
+

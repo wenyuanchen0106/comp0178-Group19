@@ -1,4 +1,7 @@
 <?php
+// notifications.php
+// Notification inbox page that lists all notifications for the current user
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -6,9 +9,10 @@ error_reporting(E_ALL);
 require_once 'utilities.php';
 require_login();
 
+// Current logged-in user id
 $uid = $_SESSION['user_id'];
 
-// 获取所有通知
+// Fetch all notifications for this user, newest first
 $rows = [];
 $result = db_query(
     "SELECT * FROM notifications WHERE user_id=? ORDER BY created_at DESC",
@@ -22,7 +26,7 @@ if ($result) {
     }
 }
 
-// 标记为已读
+// Mark all notifications as read for this user
 db_query("UPDATE notifications SET is_read=1 WHERE user_id=?", "i", [$uid]);
 
 include 'header.php';

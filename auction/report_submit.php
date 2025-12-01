@@ -3,7 +3,7 @@
 require_once 'utilities.php';
 require_login();
 
-// 必须用 POST
+// Only accept POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die("<p>Invalid request.</p>");
 }
@@ -18,7 +18,7 @@ if ($auction_id <= 0 || $item_id <= 0 || $description === '') {
     die("<p>Missing required fields.</p>");
 }
 
-// 插入举报记录
+// Insert new report record
 $sql = "INSERT INTO reports (user_id, auction_id, item_id, description, status, created_at)
         VALUES (?, ?, ?, ?, 'open', NOW())";
 

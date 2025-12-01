@@ -3,10 +3,10 @@
 <div class="container">
 <h2 class="my-3">Register new account</h2>
 
-<!-- Create auction form -->
+<!-- Registration form -->
 <form method="POST" action="process_registration.php">
 
-  <!-- accountType -->
+  <!-- Account type -->
   <div class="form-group row">
     <label for="accountType" class="col-sm-2 col-form-label text-right">Registering as a:</label>
     <div class="col-sm-10">
@@ -23,6 +23,8 @@
       </small>
     </div>
   </div>
+
+  <!-- Full name -->
   <div class="form-group row">
     <label for="name" class="col-sm-2 col-form-label text-right">Full Name</label>
     <div class="col-sm-10">
@@ -33,7 +35,7 @@
     </div>
   </div>
 
-  <!-- email -->
+  <!-- Email -->
   <div class="form-group row">
     <label for="email" class="col-sm-2 col-form-label text-right">Email</label>
     <div class="col-sm-10">
@@ -44,7 +46,7 @@
     </div>
   </div>
 
-  <!-- password -->
+  <!-- Password -->
   <div class="form-group row">
     <label for="password" class="col-sm-2 col-form-label text-right">Password</label>
     <div class="col-sm-10">
@@ -55,7 +57,7 @@
     </div>
   </div>
 
-  <!-- passwordConfirmation -->
+  <!-- Password confirmation -->
   <div class="form-group row">
     <label for="passwordConfirmation" class="col-sm-2 col-form-label text-right">Repeat password</label>
     <div class="col-sm-10">
@@ -66,7 +68,7 @@
     </div>
   </div>
 
-  <!-- submit -->
+  <!-- Submit -->
   <div class="form-group row">
     <button type="submit" class="btn btn-primary form-control">Register</button>
   </div>
@@ -78,5 +80,6 @@
   <a href="" data-toggle="modal" data-target="#loginModal">Login</a>
 </div>
 
+</div>
 
 <?php include_once("footer.php")?>

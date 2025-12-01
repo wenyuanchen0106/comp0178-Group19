@@ -1,27 +1,30 @@
 <?php
+// process_registration.php
+// Handles registration form submission, validates input, creates the user, and logs them in.
+
 require_once 'utilities.php';
 
-// 只接受 POST 请求
+// Only accept POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: register.php');
     exit();
 }
 
-// 1. 读取并清洗表单数据
+// 1. Read and sanitize form input
 $accountType = $_POST['accountType'] ?? '';
 $email       = trim($_POST['email'] ?? '');
-$name        = trim($_POST['name'] ?? ''); // ✅ 新增：获取名字
+$name        = trim($_POST['name'] ?? ''); // Read full name field
 $password    = $_POST['password'] ?? '';
 $password2   = $_POST['passwordConfirmation'] ?? '';
 
 $errors = [];
 
-// 2. 基本校验
+// 2. Basic validation
 if ($accountType !== 'buyer' && $accountType !== 'seller') {
     $errors[] = 'Please choose a valid account type.';
 }
 
-// ✅ 新增：校验名字
+// Validate full name
 if ($name === '') {
     $errors[] = 'Full Name is required.';
 }
@@ -38,7 +41,7 @@ if ($password === '' || $password2 === '') {
     $errors[] = 'Passwords do not match.';
 }
 
-// 3. 如果有错误，显示错误信息
+// 3. If there are validation errors, show them and stop
 if (!empty($errors)) {
     include_once 'header.php';
     echo '<div class="container my-5">';
@@ -54,10 +57,10 @@ if (!empty($errors)) {
     exit();
 }
 
-// 4. 连接数据库
+// 4. Get database connection
 $conn = get_db();
 
-// 5. 查找角色的 role_id
+// 5. Look up role_id for the selected account type
 $roleId = null;
 $result = db_query(
     "SELECT role_id FROM roles WHERE role_name = ? LIMIT 1",
@@ -68,7 +71,7 @@ $result = db_query(
 if ($result && $row = $result->fetch_assoc()) {
     $roleId = (int)$row['role_id'];
 } else {
-    // 自动修复角色表逻辑 (保留你原有的逻辑)
+    // Fallback: create the role record if it does not exist yet
     db_execute("INSERT INTO roles (role_name) VALUES (?)", "s", [$accountType]);
     $result2 = db_query("SELECT role_id FROM roles WHERE role_name = ? LIMIT 1", "s", [$accountType]);
     if ($result2 && $row2 = $result2->fetch_assoc()) {
@@ -78,7 +81,7 @@ if ($result && $row = $result->fetch_assoc()) {
     }
 }
 
-// 6. 检查 email 是否已存在
+// 6. Check whether the email is already registered
 $result = db_query("SELECT user_id FROM users WHERE email = ? LIMIT 1", "s", [$email]);
 
 if ($result && $result->num_rows > 0) {
@@ -91,27 +94,26 @@ if ($result && $result->num_rows > 0) {
     exit();
 }
 
-// 7. 创建用户 (插入数据库)
-$passwordHash = password_hash($password, PASSWORD_DEFAULT); // 使用 PHP 的安全密码哈希函数
+// 7. Insert new user record
+$passwordHash = password_hash($password, PASSWORD_DEFAULT); // Hash password securely
 
-// ✅ 修正：使用用户输入的 $name，而不是 $email
 db_execute(
     "INSERT INTO users (name, email, password_hash, role_id) VALUES (?, ?, ?, ?)",
     "sssi",
     [$name, $email, $passwordHash, $roleId]
 );
 
-// 获取新用户 ID
+// Get the new user id from the connection
 $newUserId = $conn->insert_id;
 
-// 8. 自动登录 & 设置 Session
+// 8. Log the new user in and populate session fields
 $_SESSION['user_id']      = $newUserId;
-$_SESSION['username']     = $name;        // ✅ 存入名字，方便 Header 显示 "Hello, Tony Stark"
+$_SESSION['username']     = $name;        // Store full name for greeting in header
 $_SESSION['role_name']    = $accountType;
 $_SESSION['logged_in']    = true;
 $_SESSION['account_type'] = $accountType;
 
-// 9. 注册成功提示并跳转
+// 9. Show success message and redirect to browse page
 include_once 'header.php';
 ?>
 

@@ -1,18 +1,9 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+require_once 'utilities.php';   // Session is already started inside utilities.php; do not start it again here
 
-require_once 'utilities.php';
-
-close_expired_auctions();
-activate_pending_auctions();
-
-include_once 'header.php';
-
-if (!is_logged_in()) {
-    echo '<div class="alert alert-danger text-center my-4">You must be logged in to view your bids.</div>';
-    include_once 'footer.php';
+// Only accept POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    redirect('index.php');
     exit();
 }
 

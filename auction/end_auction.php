@@ -18,7 +18,7 @@ try {
 
     $seller_id = current_user_id();
 
-    // ⭐ 正确查询 title + start_price（匹配你的表结构）
+    // Correct query for auction title and start_price (matches current schema)
     $sql = "
         SELECT a.auction_id, a.status, a.start_price, i.title
         FROM auctions a
@@ -41,7 +41,7 @@ try {
         throw new Exception("Auction already ended");
     }
 
-    // ⭐ Winner 查询：使用 buyer_id（你们真实字段）
+    // Winner query: use buyer_id as the actual foreign key to users
     $winner_sql = "
         SELECT u.user_id, u.email, u.name, b.bid_amount
         FROM bids b
@@ -58,7 +58,7 @@ try {
         $winner = $winner_result->fetch_assoc();
     }
 
-    // ⭐ 计算最终价格
+    // Compute final price and winner information
     if ($winner) {
         $winner_id    = $winner['user_id'];
         $winner_name  = $winner['name'];
@@ -66,10 +66,10 @@ try {
         $final_price  = $winner['bid_amount'];
     } else {
         $winner_id    = null;
-        $final_price  = $start_price; // 无竞价 → 使用起拍价
+        $final_price  = $start_price; // No bids → use starting price
     }
 
-    // ⭐ 获取卖家信息
+    // Fetch seller information
     $seller_result = db_query(
         "SELECT name, email FROM users WHERE user_id = ?",
         "i",
@@ -79,7 +79,7 @@ try {
     $seller_name  = $seller['name'];
     $seller_email = $seller['email'];
 
-    // ⭐ 更新数据库状态
+    // Update auction state and send emails
     if ($winner_id !== null) {
 
         db_execute(
@@ -88,7 +88,7 @@ try {
             [$winner_id, $auction_id]
         );
 
-        // 发给赢家
+        // Email winner
         sendEmail(
             $winner_email,
             "🎉 You won the auction: {$auction_title}",
@@ -98,7 +98,7 @@ try {
             "Please log in to Stark Exchange to complete payment.\n"
         );
 
-        // 发给卖家
+        // Email seller
         sendEmail(
             $seller_email,
             "📦 Your item was sold: {$auction_title}",
@@ -110,14 +110,14 @@ try {
 
     } else {
 
-        // 无人出价，结束拍卖
+        // No bids, finish auction without a winner
         db_execute(
             "UPDATE auctions SET status='finished', end_date=NOW() WHERE auction_id=?",
             "i",
             [$auction_id]
         );
 
-        // 通知卖家无人出价
+        // Notify seller that there were no bids
         sendEmail(
             $seller_email,
             "⚠ Your auction ended — No bids",
@@ -127,7 +127,7 @@ try {
         );
     }
 
-    // 跳回我的拍卖页面
+    // Redirect back to seller listings page
     header("Location: mylistings.php");
     exit();
 
@@ -143,3 +143,4 @@ try {
 
 
 ?>
+

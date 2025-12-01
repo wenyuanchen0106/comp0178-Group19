@@ -1,4 +1,7 @@
 <?php
+// pay.php
+// Shows a payment confirmation screen for the winning bidder before recording payment
+
 // Enable error reporting for debugging during development
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -26,9 +29,7 @@ if ($auction_id <= 0) {
 // Get the current logged-in user id
 $user_id = current_user_id();
 
-// Fetch auction information and compute current_price from bids
-// - COALESCE(MAX(b.bid_amount), a.start_price) gives the final price
-//   (if there are no bids, it falls back to start_price)
+// Fetch auction and final price (highest bid or starting price if no bids)
 $sql = "
     SELECT 
         a.auction_id,
@@ -55,7 +56,6 @@ if (!$result || $result->num_rows === 0) {
 $auction = $result->fetch_assoc();
 
 // Only allow payment if the auction is finished/closed/paid
-// (paid will be handled as already-paid later)
 if (!in_array($auction['status'], ['finished', 'closed', 'paid'], true)) {
     redirect('mybids.php');
 }
@@ -99,7 +99,7 @@ include_once 'header.php';
 
     <div class="mb-3">
       <label for="payment_method" class="form-label">Payment method</label>
-      <!-- Simple select for payment method; this is conceptual, no real gateway integration -->
+      <!-- Simple select for payment method; no real payment gateway integration -->
       <select class="form-select" id="payment_method" name="payment_method" required>
         <option value="card">Card</option>
         <option value="paypal">PayPal</option>

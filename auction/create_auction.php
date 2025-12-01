@@ -1,12 +1,13 @@
 <?php
+// Show form for sellers to create a new auction
+
 require_once 'utilities.php';
 
-  // If user is not logged in or not a seller, they should not be able to
-  // use this page.
-  if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') {
+// Redirect if user is not logged in or not a seller
+if (!isset($_SESSION['account_type']) || $_SESSION['account_type'] != 'seller') {
     header('Location: browse.php');
     exit();
-  }
+}
 
 include_once("header.php");
 ?>
@@ -174,3 +175,4 @@ include_once("header.php");
 </div>
 
 <?php include_once("footer.php")?>
+

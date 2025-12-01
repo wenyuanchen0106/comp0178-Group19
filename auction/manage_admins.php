@@ -1,11 +1,11 @@
 <?php
 // manage_admins.php
-// 管理员管理页面 - 创建新管理员
+// Administrator management page - create new admin users
 
 require_once 'utilities.php';
 require_login();
 
-// 检查是否管理员
+// Check if current user is admin
 if ($_SESSION['role_id'] != 3) {
     echo "<p style='color:red'>Access denied: Admin only.</p>";
     exit;
@@ -14,14 +14,14 @@ if ($_SESSION['role_id'] != 3) {
 $message = '';
 $error = '';
 
-// 处理创建新管理员
+// Handle create new admin request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_admin'])) {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // 验证输入
+    // Validate input fields
     if (empty($name) || empty($email) || empty($password)) {
         $error = "All fields are required.";
     } elseif ($password !== $confirm_password) {
@@ -29,14 +29,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_admin'])) {
     } elseif (strlen($password) < 6) {
         $error = "Password must be at least 6 characters.";
     } else {
-        // 检查邮箱是否已存在
+        // Check if email already exists
         $check_sql = "SELECT user_id FROM users WHERE email = ?";
         $result = db_query($check_sql, "s", [$email]);
 
         if ($result->num_rows > 0) {
             $error = "Email already exists.";
         } else {
-            // 创建新管理员 - 使用password_hash()与登录验证匹配
+            // Create new admin user (password hashed to match login verification)
             $password_hash = password_hash($password, PASSWORD_DEFAULT);
             $insert_sql = "INSERT INTO users (name, email, password_hash, role_id) VALUES (?, ?, ?, 3)";
             db_query($insert_sql, "sss", [$name, $email, $password_hash]);
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_admin'])) {
     }
 }
 
-// 获取所有管理员列表
+// Fetch list of all admin users
 $sql = "SELECT user_id, name, email, created_at FROM users WHERE role_id = 3 ORDER BY created_at DESC";
 $admins = db_query($sql);
 
@@ -69,7 +69,7 @@ include_once 'header.php';
         </div>
     <?php endif; ?>
 
-    <!-- 创建新管理员表单 -->
+    <!-- Create new admin form -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">Create New Administrator</h5>
@@ -104,7 +104,7 @@ include_once 'header.php';
         </div>
     </div>
 
-    <!-- 现有管理员列表 -->
+    <!-- Existing admins list -->
     <div class="card">
         <div class="card-header bg-secondary text-white">
             <h5 class="mb-0">Existing Administrators</h5>
@@ -135,3 +135,4 @@ include_once 'header.php';
 </div>
 
 <?php include_once 'footer.php'; ?>
+

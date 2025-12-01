@@ -1,11 +1,11 @@
 <?php
 // admin_reports.php
-// 管理员查看所有举报并处理
+// Admin page to view and handle all reports
 
 require_once 'utilities.php';
-require_login(); // 必须登录
+require_login(); // User must be logged in
 
-// 检查是否管理员（role_id = 3 或你们定义的 admin）
+// Check if current user is admin (role_id = 3 or your defined admin role)
 if ($_SESSION['role_id'] != 3) {
     echo "<p style='color:red'>Access denied: Admin only.</p>";
     exit;
@@ -13,7 +13,7 @@ if ($_SESSION['role_id'] != 3) {
 
 include_once 'header.php';
 
-// 获取所有举报以及拍卖状态
+// Fetch all reports with related auction and item information
 $sql = "
     SELECT
         r.report_id,
@@ -109,3 +109,4 @@ $result = db_query($sql);
 </div>
 
 <?php include_once 'footer.php'; ?>
+

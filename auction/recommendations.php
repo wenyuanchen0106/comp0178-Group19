@@ -1,7 +1,11 @@
 <?php
+// recommendations.php
+// Shows personalised item recommendations based on the category of the user's most recent bid.
+
 require_once 'utilities.php';
 include_once 'header.php';
 
+// Require login before showing recommendations
 if (!is_logged_in()) {
     echo '<div class="container mt-4"><div class="alert alert-danger text-center">Please log in to check recommendations.</div></div>';
     include_once 'footer.php';
@@ -15,6 +19,7 @@ $user_id = $_SESSION['user_id'];
     <h2 class="my-3 text-uppercase" style="font-family: 'Oswald', sans-serif; letter-spacing: 1px;">Recommendations for You</h2>
 
     <?php
+    // Get the category of the item from the user's most recent bid
     $sql_recent = "
         SELECT i.category_id, i.item_id
         FROM bids b
@@ -27,16 +32,19 @@ $user_id = $_SESSION['user_id'];
 
     $result_recent = db_query($sql_recent, 'i', [$user_id]);
 
+    // If the user has no bid history, prompt them to browse first
     if (!$result_recent || $result_recent->num_rows == 0) {
         echo '<div class="text-center py-5">';
         echo '<p class="text-muted mb-4">No past bids found. Browse items to get recommendations.</p>';
         echo '<a href="browse.php" class="btn btn-primary btn-lg">Browse Auctions</a>';
         echo '</div>';
     } else {
+        // Use the category of the latest bid and exclude that exact item
         $last_row = $result_recent->fetch_assoc();
         $target_cat_id = (int)$last_row['category_id'];
         $exclude_item_id = (int)$last_row['item_id'];
 
+        // Recommend up to 4 other items from the same category
         $rec_sql = "
             SELECT item_id, title, description, image_path
             FROM items
@@ -59,6 +67,7 @@ $user_id = $_SESSION['user_id'];
                 $description = $row['description'];
                 $image_path = $row['image_path'];
 
+                // Shorten long descriptions for card display
                 $short_desc = $description;
                 if (strlen($short_desc) > 80) {
                     $short_desc = substr($short_desc, 0, 77) . '...';
@@ -69,6 +78,7 @@ $user_id = $_SESSION['user_id'];
 
                         <div style="height: 180px; overflow: hidden; border-bottom: 1px solid var(--color-primary);">
                             <?php
+                            // Show item image if available, otherwise a placeholder
                             if (!empty($image_path) && file_exists($image_path)) {
                                 echo '<img src="' . htmlspecialchars($image_path) . '" class="card-img-top" alt="' . htmlspecialchars($title) . '" style="height: 100%; width: 100%; object-fit: cover;">';
                             } else {
@@ -101,3 +111,4 @@ $user_id = $_SESSION['user_id'];
 </div>
 
 <?php include_once 'footer.php'; ?>
+

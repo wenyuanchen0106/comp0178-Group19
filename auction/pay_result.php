@@ -1,5 +1,8 @@
 <?php
-// 1Enable error reporting for debugging during development
+// pay_result.php
+// Handles a payment submission for a finished auction, records it and sends notifications
+
+// Enable error reporting for debugging during development
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -32,7 +35,7 @@ if ($auction_id <= 0 || $payment_method === '') {
 $user_id = current_user_id();
 
 // Fetch auction info and compute the final amount from bids
-// Again, we use COALESCE(MAX(b.bid_amount), a.start_price) as the final price
+// Uses COALESCE(MAX(b.bid_amount), a.start_price) as final price
 $sql = "
     SELECT 
         a.auction_id,
@@ -92,7 +95,8 @@ $ok = db_query($sql, 'iids', [$user_id, $auction_id, $amount, $payment_method]);
 
 if ($ok) {
 
-    // ⭐ 通知买家（当前用户）
+    // Notify buyer (current user) about successful payment
+    // Assumes send_notification() helper is available (for example via notify.php)
     send_notification(
         $user_id,
         "Payment Successful",
@@ -100,13 +104,13 @@ if ($ok) {
         "mybids.php"
     );
 
-    // ⭐ 查找卖家 ID
+    // Look up seller id for this auction
     $sql_seller = "SELECT seller_id FROM auctions WHERE auction_id = ?";
     $res_seller = db_query($sql_seller, 'i', [$auction_id]);
     $row_seller = $res_seller->fetch_assoc();
     $seller_id = (int)$row_seller['seller_id'];
 
-    // ⭐ 通知卖家
+    // Notify seller that the item has been paid for
     send_notification(
         $seller_id,
         "Item Paid",
@@ -114,7 +118,7 @@ if ($ok) {
         "mylistings.php"
     );
 
-    // 更新拍卖状态
+    // Update auction status to paid
     $sql2 = "UPDATE auctions SET status = 'paid' WHERE auction_id = ?";
     db_query($sql2, 'i', [$auction_id]);
 
@@ -124,7 +128,7 @@ if ($ok) {
     $_SESSION['error_message'] = 'Payment failed.';
 }
 
-
 // Redirect back to My Bids page where the flash message will be shown
 redirect('mybids.php');
+
 
