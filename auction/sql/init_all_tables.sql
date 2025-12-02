@@ -48,21 +48,39 @@ INSERT IGNORE INTO categories (category_name) VALUES
 INSERT INTO items (title, description, category_id, seller_id)
 VALUES
   (
-    'Vintage Coffee Table',
-    'Solid wood coffee table with some signs of wear but very sturdy.',
-    (SELECT category_id FROM categories WHERE category_name = 'Home & Garden' LIMIT 1),
+    'chiikawa toy',
+    'Very cute and popular chiikawa toy.',
+    (SELECT category_id FROM categories WHERE category_name = 'Toys' LIMIT 1),
     (SELECT user_id FROM users WHERE email = 'demo_seller1@example.com' LIMIT 1)
   ),
   (
-    'Football Boots Size 42',
-    'Lightweight football boots, barely used, perfect for weekend games.',
+    'Air Jorden 1',
+    'Air Jorden 1 basketball shoes brand new.',
     (SELECT category_id FROM categories WHERE category_name = 'Sports' LIMIT 1),
     (SELECT user_id FROM users WHERE email = 'demo_seller1@example.com' LIMIT 1)
   ),
   (
-    'LEGO City Set',
-    'Box opened but all pieces included, with instruction booklet.',
-    (SELECT category_id FROM categories WHERE category_name = 'Toys' LIMIT 1),
+    'Football player card',
+    'Famous football player Kylian Mbappe card.',
+    (SELECT category_id FROM categories WHERE category_name = 'Sports' LIMIT 1),
+    (SELECT user_id FROM users WHERE email = 'demo_seller1@example.com' LIMIT 1)
+  ),
+  (
+    'small cat',
+    'A one-month-old cat',
+    (SELECT category_id FROM categories WHERE category_name = 'Home & Garden' LIMIT 1),
+    (SELECT user_id FROM users WHERE email = 'demo_seller1@example.com' LIMIT 1)
+  ),
+  (
+    'Sweater and coat',
+    'Nice and very comfortable sweater and coat size M.',
+    (SELECT category_id FROM categories WHERE category_name = 'Clothing' LIMIT 1),
+    (SELECT user_id FROM users WHERE email = 'demo_seller1@example.com' LIMIT 1)
+  ),
+  (
+    'Ring',
+    'beautiful ring with diamond.',
+    (SELECT category_id FROM categories WHERE category_name = 'Fashion' LIMIT 1),
     (SELECT user_id FROM users WHERE email = 'demo_seller1@example.com' LIMIT 1)
   );
 
