@@ -121,15 +121,7 @@ INSERT INTO watchlist (user_id, auction_id) VALUES
 (6, 1); -- Rocket watching Gauntlet
 
 -- ================================
--- 8. Favourites
--- ================================
-INSERT INTO favourites (user_id, item_id) VALUES
-(1, 2),
-(1, 4),
-(6, 1);
-
--- ================================
--- 9. Recommendations
+-- 8. Recommendations
 -- ================================
 INSERT INTO recommendations (user_id, item_id, reason, score) VALUES
 (1, 4, 'Because you like Stark Tech', 95.5),
@@ -137,20 +129,20 @@ INSERT INTO recommendations (user_id, item_id, reason, score) VALUES
 (2, 2, 'You might need a new shield', 99.9);
 
 -- ================================
--- 10. Autobids
+-- 9. Autobids
 -- ================================
 INSERT INTO autobids (user_id, auction_id, max_amount, step) VALUES
 (6, 1, 800000.00, 1000.00); -- Rocket set autobid for Gauntlet
 
 -- ================================
--- 11. Reports
+-- 10. Reports
 -- ================================
 INSERT INTO reports (user_id, auction_id, item_id, description, status) VALUES
 (2, 5, 5, 'This item is too dangerous for civilians.', 'open'),
 (5, 1, 1, 'This belongs in a museum in Asgard.', 'closed');
 
 -- ================================
--- 12. Payments
+-- 11. Payments
 -- ================================
 INSERT INTO payments (user_id, auction_id, amount, payment_method, status, paid_at) VALUES
 -- Steve Rogers paid for Mjolnir
