@@ -228,29 +228,6 @@ CREATE TABLE recommendations (
 ) ENGINE=InnoDB;
 
 -- ==============
--- favourites
--- ==============
-DROP TABLE IF EXISTS favourites;
-CREATE TABLE favourites (
-    user_id  INT NOT NULL,
-    item_id  INT NOT NULL,
-
-    PRIMARY KEY (user_id, item_id),
-
-    CONSTRAINT fk_favourites_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    CONSTRAINT fk_favourites_item
-        FOREIGN KEY (item_id)
-        REFERENCES items(item_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-) ENGINE=InnoDB;
-
--- ==============
 -- watchlist
 -- ==============
 DROP TABLE IF EXISTS watchlist;
