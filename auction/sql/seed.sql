@@ -5,7 +5,6 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Reset all tables
 TRUNCATE TABLE autobids;
 TRUNCATE TABLE watchlist;
-TRUNCATE TABLE favourites;
 TRUNCATE TABLE recommendations;
 TRUNCATE TABLE reports;
 TRUNCATE TABLE payments;
