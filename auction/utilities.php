@@ -293,11 +293,27 @@ function print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time,
 
   // Image handling: real image if file exists, otherwise placeholder block
   $img_html = '';
-  if (!empty($image_path) && file_exists("images/" . $image_path)) {
-      $img_html = '<img src="images/' . $image_path . '" alt="' . htmlspecialchars($title) . '" style="width: 150px; height: 150px; object-fit: cover; border-radius: 4px; margin-right: 20px; border: 1px solid #333;">';
-  } else {
-      $img_html = '<div class="img-placeholder"></div>';
-  }
+ // --- Image handling ---
+ // Extract filename only
+ $filename = basename($image_path ?? '');
+
+ $real_path = __DIR__ . "/images/" . $filename;   // absolute path for file_exists
+ $web_path  = "images/" . $filename;              // relative path for <img>
+
+ if (!empty($filename) && file_exists($real_path)) {
+
+    // Real image
+    $img_html = '<img src="' . $web_path . '" alt="' . htmlspecialchars($title) . '"
+                 style="width:150px;height:150px;object-fit:cover;border-radius:4px;
+                 margin-right:20px;border:1px solid #333;">';
+
+ } else {
+
+    // Placeholder
+    $img_html = '<div class="img-placeholder"></div>';
+
+}
+
   
   echo('
     <li class="list-group-item d-flex justify-content-between align-items-center">
