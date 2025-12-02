@@ -2,66 +2,59 @@
    MARVEL / IRON MAN STYLE - FINAL CLEAN VERSION
    ========================================= */
 
-/* 1. 核心变量定义 */
+/* 1. define color variables */
 :root {
-    --color-primary: #E30022;      /* 英雄红 */
-    --color-accent: #FFD700;       /* 耀眼金色 */
-    --color-bg-dark: #0A0A0A;      /* 深炭黑 */
-    --color-bg-secondary: #1C1C1E; /* 次级背景色 */
-    --color-bg-input: #2D2D30;     /* 输入框背景 */
-    --color-text-light: #F0F0F0;   /* 亮色文字 */
-    --color-text-muted: #B0B0B0;   /* 灰色文字 */
+    --color-primary: #E30022;      
+    --color-accent: #FFD700;       
+    --color-bg-dark: #0A0A0A;      
+    --color-bg-secondary: #1C1C1E; 
+    --color-bg-input: #2D2D30;    
+    --color-text-light: #F0F0F0;   
+    --color-text-muted: #B0B0B0;  
 }
 
 /* =========================================
-   2. 全局基础设置 (Google Fonts 终极版)
+   2. Google Fonts
    ========================================= */
 body, html {
-    /* 背景保持不变 */
     background-color: var(--color-bg-dark) !important;
     background: linear-gradient(135deg, #0f0f10 0%, #1a0b0e 100%) !important;
     min-height: 100vh;
     color: var(--color-text-light) !important;
-    
-    /* --- 关键：正文使用 Roboto --- */
-    /* 这种字体非常清晰，哪怕字很小也看得清 */
+ 
     font-family: 'Roboto', sans-serif !important;
     font-weight: 400;
-    letter-spacing: 0.5px; /* 正常的间距，读起来很舒服 */
+    letter-spacing: 0.5px; 
 }
 
-/* --- 关键：标题使用 Oswald --- */
 h1, h2, h3, h4, h5, h6, 
 .navbar-brand, 
 .card-title, 
 .container h2, 
 .btn {
     font-family: 'Oswald', sans-serif !important;
-    font-weight: 700; /* 粗体 */
+    font-weight: 700; 
     
-    /* Oswald 即使不拉很大间距也很帅，1.5px 刚刚好，不会挤也不会散 */
     letter-spacing: 1.5px !important; 
     
-    text-transform: uppercase; /* 大写，更有气势 */
+    text-transform: uppercase; 
     color: white !important;
     
-    /* 清晰的硬边阴影，增加立体感 */
     text-shadow: 2px 2px 0px rgba(0,0,0,0.8) !important;
     
     margin-bottom: 15px;
 }
 
-/* 专门修复：推荐页那个 "Based on your recent bid..." 小字 */
 .container p.text-muted, .text-muted {
     font-family: 'Roboto', sans-serif !important;
     font-weight: 400;
-    letter-spacing: normal; /* 恢复正常间距 */
-    text-shadow: none !important; /* 去掉阴影 */
+    letter-spacing: normal; 
+    text-shadow: none !important; 
     color: #bbb !important;
 }
 
 
-/* 3. 顶部导航栏 (Top navbar) */
+/* 3. Top navbar*/
 .navbar-light.bg-light {
     background-color: var(--color-bg-secondary) !important; 
     border-bottom: 1px solid rgba(255, 215, 0, 0.3);
@@ -71,7 +64,7 @@ h1, h2, h3, h4, h5, h6,
     color: var(--color-primary) !important;
     font-weight: 900;
     font-size: 1.8rem;
-    letter-spacing: 3px !important; /* 拉大间距 */
+    letter-spacing: 3px !important; 
     margin-right: 40px !important;
     text-shadow: 2px 2px 0px #000, 0 0 5px rgba(227, 0, 34, 0.4); 
     text-transform: uppercase;
@@ -86,7 +79,7 @@ h1, h2, h3, h4, h5, h6,
     font-weight: bold;
 }
 
-/* 4. 第二层功能导航栏 (Dark navbar) */
+/* 4. Dark navbar*/
 .navbar-dark.bg-dark {
     background-color: var(--color-bg-dark) !important;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
@@ -107,7 +100,7 @@ h1, h2, h3, h4, h5, h6,
     text-shadow: 0 0 8px rgba(227, 0, 34, 0.6);
 }
 
-/* 5. 按钮样式 (钢铁侠风格) */
+/* 5.buttons style */
 .btn {
     border-radius: 2px !important;
     font-weight: bold;
@@ -127,7 +120,7 @@ h1, h2, h3, h4, h5, h6,
     box-shadow: 0 0 15px rgba(227, 0, 34, 0.6);
 }
 
-/* 6. 模态框 (Login Modal) */
+/* 6. Login Modal */
 .modal-content {
     background-color: var(--color-bg-secondary) !important;
     border: 1px solid var(--color-accent) !important;
@@ -139,7 +132,7 @@ h1, h2, h3, h4, h5, h6,
 .modal-header .close { color: var(--color-text-light) !important; text-shadow: none; opacity: 1; }
 .modal-title { color: var(--color-accent) !important; font-weight: bold; }
 
-/* 表单输入框 */
+
 .form-control {
     background-color: var(--color-bg-input) !important;
     border: 1px solid #444 !important;
@@ -153,7 +146,7 @@ h1, h2, h3, h4, h5, h6,
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
-/* 7. 搜索框深度修复 (Search Bar) */
+/* 7. Search Bar */
 .input-group-text {
     background-color: var(--color-bg-input) !important;
     border: 1px solid #444 !important;
@@ -181,11 +174,11 @@ h1, h2, h3, h4, h5, h6,
 .input-group:hover { box-shadow: 0 4px 20px rgba(227, 0, 34, 0.2); }
 
 /* =========================================
-   8. 列表终极形态：神盾局全息档案 (Consolidated List Styles)
+   8. Consolidated List Styles
    ========================================= */
 ul.list-group {
     border: none !important;
-    gap: 15px; /* 列表项之间的空隙 */
+    gap: 15px; 
     background-color: transparent !important;
 }
 
@@ -196,7 +189,6 @@ ul.list-group {
     border-radius: 4px;
     padding: 20px 25px;
     
-    /* 核心特征：左侧暗金色能量条 */
     border-left: 5px solid rgba(255, 215, 0, 0.4) !important; 
     
     position: relative;
@@ -204,20 +196,20 @@ ul.list-group {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* 悬停特效 */
+
 .list-group-item:hover {
-    transform: translateX(10px); /* 右移 */
+    transform: translateX(10px); 
     background-color: #252529 !important;
     
-    /* 能量条充能：变红 */
+  
     border-left-color: var(--color-primary) !important;
     
-    /* 发光 */
+    
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), -2px 0 10px rgba(227, 0, 34, 0.3);
     z-index: 10;
 }
 
-/* 列表内文字 */
+
 .list-group-item h5, .list-group-item a {
     color: var(--color-text-light) !important;
     font-weight: bold;
@@ -228,10 +220,9 @@ ul.list-group {
 }
 
 .list-group-item:hover h5, .list-group-item:hover a {
-    color: var(--color-accent) !important; /* 悬停标题变金 */
+    color: var(--color-accent) !important; 
 }
 
-/* 扫描线动画 (Scanline Effect) */
 .list-group-item::after {
     content: "";
     position: absolute;
@@ -249,62 +240,59 @@ ul.list-group {
 }
 
 /* =========================================
-   9. 推荐页卡片 (Cards) - 修复版
+   9. Cards
    ========================================= */
 .card {
-    background-color: var(--color-bg-secondary) !important; /* 深灰背景 */
-    border: 1px solid var(--color-accent) !important; /* 金色细边框 */
-    margin-bottom: 20px; /* 卡片间距 */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* 加深阴影，让卡片浮起来 */
+    background-color: var(--color-bg-secondary) !important; 
+    border: 1px solid var(--color-accent) !important; 
+    margin-bottom: 20px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
 }
 
-/* 增加卡片内部内容的间距，让文字呼吸 */
 .card-body {
     padding: 1.5rem !important; 
 }
 
-/* 修复卡片标题 */
+
 .card-title, .card h4, .card h5 {
-    color: white !important; /* 纯白标题 */
+    color: white !important; 
     font-weight: bold;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.2); /* 改为微弱的金色分割线 */
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2); 
     padding-bottom: 12px;
     margin-bottom: 15px;
-    font-size: 1.3rem; /* 稍微加大标题 */
+    font-size: 1.3rem; 
 }
 
-/* 关键修复：提亮正文描述 */
+
 .card p, .card .text-muted, .card-text {
-    /* 将原来的灰色 #ccc 改为接近纯白的高亮色 */
+    
     color: rgba(255, 255, 255, 0.95) !important; 
-    font-size: 1.1rem; /* 字体稍微加大一点点，更容易辨认 */
-    line-height: 1.5; /* 增加行高 */
+    font-size: 1.1rem; 
+    line-height: 1.5; 
 }
 
-/* 关键修复：链接颜色改为金色，更清晰 */
 .card a.btn, .card a {
-    /* 将原来的红色改为金色，在深底上对比度更高 */
     color: var(--color-accent) !important; 
-    font-weight: 800; /* 极粗体 */
+    font-weight: 800; 
     text-transform: uppercase;
     text-decoration: none;
-    letter-spacing: 1px; /* 增加字间距 */
+    letter-spacing: 1px; 
     display: inline-block;
     margin-top: 10px;
 }
 
-/* 悬停链接时，加上红色光晕背景 */
+
 .card a:hover {
     color: white !important;
-    background-color: var(--color-primary); /* 鼠标放上去背景变红 */
-    padding: 5px 10px; /* 增加一点背景区域 */
+    background-color: var(--color-primary);
+    padding: 5px 10px; 
     border-radius: 4px;
     box-shadow: 0 0 10px rgba(227, 0, 34, 0.5);
     transition: all 0.2s ease-in-out;
 }
 
 /* =========================================
-   10. 首页欢迎栏 (Mission Briefing)
+   10. Mission Briefing
    ========================================= */
 .container h2.my-3 {
     background: rgba(255, 255, 255, 0.05);
@@ -326,11 +314,11 @@ ul.list-group {
     margin-left: 5px;
 }
 /* =========================================
-   12. 首页巨幕 (Hero Section)
+   12. Hero Section
    ========================================= */
 .hero-section {
     position: relative;
-    /* 这里引用了一张网路上的抽象科技背景图，你也可以换成其他的URL */
+    
     background-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop'); 
     background-size: cover;
     background-position: center;
@@ -340,23 +328,23 @@ ul.list-group {
     border-bottom: 4px solid var(--color-primary);
 }
 
-/* 加一层黑色遮罩，防止背景太花看不清字 */
+
 .hero-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.7); /* 70% 透明度的黑 */
+    background: rgba(0, 0, 0, 0.7); 
     z-index: 1;
 }
 
 .hero-content {
     position: relative;
-    z-index: 2; /* 保证文字在遮罩上面 */
+    z-index: 2; 
 }
 
 .hero-section h1 {
     font-family: 'Impact', sans-serif !important;
     letter-spacing: 2px;
-    color: var(--color-accent); /* 金色标题 */
+    color: var(--color-accent);
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 }
 
@@ -368,21 +356,19 @@ ul.list-group {
 }
 
 /* =========================================
-   13. 列表页占位符：斯塔克数据模块 (Stark Data Module)
+   13. Stark Data Module
    ========================================= */
 .img-placeholder {
     width: 150px; 
     height: 150px;
     flex-shrink: 0;
     
-    /* 背景：深红色的科技网格 */
     background-color: #1a0505;
     background-image: 
         linear-gradient(rgba(227, 0, 34, 0.1) 1px, transparent 1px),
         linear-gradient(90deg, rgba(227, 0, 34, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px; /* 网格大小 */
+    background-size: 20px 20px;
     
-    /* 边框：暗红色实线 */
     border: 1px solid var(--color-primary);
     
     display: flex;
@@ -393,27 +379,25 @@ ul.list-group {
     margin-right: 20px;
     border-radius: 4px;
     
-    /* 红色微光 */
     box-shadow: inset 0 0 20px rgba(227, 0, 34, 0.1);
 }
 
-/* 动画层：红色的扫描激光 */
 .img-placeholder::before {
     content: "";
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 2px; /* 扫描线高度 */
-    background: var(--color-accent); /* 金色扫描线 */
+    height: 2px; 
+    background: var(--color-accent); 
     box-shadow: 0 0 10px var(--color-primary);
     animation: stark-scan 3s infinite ease-in-out;
     opacity: 0.8;
 }
 
-/* 文字层 */
+
 .img-placeholder::after {
-    content: "IMG PENDING"; /* 等待图片 */
+    content: "IMG PENDING"; 
     color: var(--color-primary);
     font-family: 'Oswald', sans-serif;
     font-size: 0.8rem;
@@ -424,33 +408,32 @@ ul.list-group {
 }
 
 /* =========================================
-   14. 详情页大图占位符：Jarvis 全息投影 (Jarvis HUD)
+   14. Jarvis HUD
    ========================================= */
 .img-placeholder-lg {
     width: 100%;
     height: 500px;
     
-    /* 背景：更有层次的深红黑渐变 */
     background: radial-gradient(circle at center, #2b0000 0%, #000 90%);
     
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column; /* 让图标和文字上下排列 */
+    flex-direction: column; 
     
-    /* 边框：金色虚线框 */
+    
     border: 2px dashed var(--color-accent);
     
     position: relative;
     overflow: hidden;
     border-radius: 6px;
     
-    /* 红色氛围光 */
+    
     box-shadow: 0 0 30px rgba(227, 0, 34, 0.1), 
                 inset 0 0 50px rgba(227, 0, 34, 0.1);
 }
 
-/* 装饰：背景上的科技圆环 (模拟全息投影底座) */
+
 .img-placeholder-lg::before {
     content: "";
     position: absolute;
@@ -458,15 +441,15 @@ ul.list-group {
     height: 300px;
     border: 1px solid rgba(227, 0, 34, 0.3);
     border-radius: 50%;
-    border-top-color: var(--color-accent); /* 顶部金色 */
+    border-top-color: var(--color-accent); 
     animation: stark-rotate 10s infinite linear;
 }
 
-/* 文字内容 */
+
 .img-placeholder-lg::after {
     content: "NO VISUAL DATA";
     font-family: 'Oswald', sans-serif;
-    color: var(--color-accent); /* 金色文字 */
+    color: var(--color-accent); 
     font-size: 1.5rem;
     letter-spacing: 4px;
     margin-top: 20px;
@@ -475,10 +458,10 @@ ul.list-group {
 }
 
 /* =========================================
-   动画定义 (Animations)
+   Animations
    ========================================= */
 
-/* 扫描线上下移动 */
+
 @keyframes stark-scan {
     0% { top: 0%; opacity: 0; }
     10% { opacity: 1; }
@@ -486,53 +469,45 @@ ul.list-group {
     100% { top: 100%; opacity: 0; }
 }
 
-/* 圆环旋转 */
 @keyframes stark-rotate {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
 /* =========================================
-   15. 修复文件上传框 (File Input Styling)
+   15.File Input Styling
    ========================================= */
 
-/* 1. 输入框主体：变黑 */
 .custom-file-label {
-    background-color: var(--color-bg-input) !important; /* 深色背景 */
-    color: var(--color-text-light) !important;          /* 浅色文字 */
-    border: 1px solid #444 !important;                  /* 深灰边框 */
+    background-color: var(--color-bg-input) !important; 
+    color: var(--color-text-light) !important;         
+    border: 1px solid #444 !important;                 
     border-radius: 4px;
     box-shadow: none !important;
 }
 
-/* 2. 右边的 "Browse" 按钮：变深色 + 金字 */
 .custom-file-label::after {
-    background-color: #38383b !important;               /* 比背景稍亮的灰色 */
-    color: var(--color-accent) !important;              /* 金色文字 */
+    background-color: #38383b !important;             
+    color: var(--color-accent) !important;             
     border-left: 1px solid #444 !important;
-    content: "Select File";                             /* 可选：改文字为更酷的 Select File */
+    content: "Select File";                             
 }
 
-/* 3. 鼠标悬停时的交互效果：发光 */
 .custom-file-input:hover ~ .custom-file-label {
-    border-color: var(--color-primary) !important;      /* 边框变红 */
-    box-shadow: 0 0 8px rgba(227, 0, 34, 0.3) !important; /* 红色微光 */
+    border-color: var(--color-primary) !important;      
+    box-shadow: 0 0 8px rgba(227, 0, 34, 0.3) !important; 
 }
 
-/* 4. 选中文件后的状态 */
+
 .custom-file-input:focus ~ .custom-file-label {
-    border-color: var(--color-accent) !important;       /* 聚焦时变金 */
+    border-color: var(--color-accent) !important;       
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.3) !important;
 }
 
 /* =========================================
-   16. 修复日期选择器 (Fix Date Picker)
+   16. Fix Date Picker
    ========================================= */
 
-/* 1. 这里的 color-scheme 删掉或注释掉，让日历变回默认的白色，保证清晰 */
-/* input[type="date"], ... { color-scheme: dark; } */
-
-/* 2. 依然保留这个，让输入框右边的小图标变成白色 (否则在深色背景下看不见) */
 ::-webkit-calendar-picker-indicator {
     filter: invert(1); 
     cursor: pointer;
